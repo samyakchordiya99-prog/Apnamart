@@ -1,42 +1,78 @@
-# ApnaBazaar
+# 🛒 ApnaMart
 
-Hyperlocal e-commerce platform connecting local vendors with nearby customers.
+**Hyperlocal 10-15 Minute Kirana Delivery Platform**  
+Connecting neighborhood Kirana stores with nearby customers with instant delivery, live tracking, and role-based portals.
 
-## Stack
-- React + TypeScript (Vite)
-- Firebase Authentication + Cloud Firestore
-- Leaflet / OpenStreetMap (free map tiles)
-- Nominatim (free geocoding)
+🔗 **Live Deployment:** [https://apnamart-teal.vercel.app](https://apnamart-teal.vercel.app)
 
-## Setup
+---
 
-1. Install dependencies:
+## 🚀 Key Features
+
+* **⚡ Blinkit-Style Quick Commerce UI:** Modern responsive design tailored for instant grocery browsing.
+* **🛍️ Customer Portal:**
+  * Direct 1-click **Google / Gmail Authentication**
+  * Dynamic Cart Drawer with tiered discounts & automated delivery fees
+  * Live Order Lifecycle tracking with real-time delivery partner coordinates
+  * Issue reporting & complaint management
+* **🏪 Vendor Portal:**
+  * Multi-shop management (Ravi Kirana Store & Sharma General Store)
+  * Real-time order dispatch, live location sharing & delivery status updates
+  * Inventory & product management
+* **⚙️ Master Admin Dashboard:**
+  * Full platform analytics, shop onboarding, order audit & system control
+* **💳 Flexible Payments:**
+  * UPI QR code payments with cropped shop-specific QRs & payment proof upload
+  * Cash on Delivery (COD)
+
+---
+
+## 🔐 Demo Credentials
+
+| Role | Access URL | Login Method / Credentials |
+| :--- | :--- | :--- |
+| **🛍️ Customer** | [/login](https://apnamart-teal.vercel.app/login) | Direct Google (Gmail) Sign-In or 1-Click Guest Test |
+| **🏪 Vendor** | [/login](https://apnamart-teal.vercel.app/login) | Shop: `Ravi Kirana Store` or `Sharma General Store`<br>Password: `Apnamart@123` |
+| **⚙️ Admin** | [/login](https://apnamart-teal.vercel.app/login) | Email: `samyakchordiya99@gmail.com`<br>Password: `Samyak@123` |
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend:** React 19 + TypeScript + Vite
+* **Routing:** React Router v7 (`vercel.json` SPA rewrite configured)
+* **Backend & Database:** Firebase Authentication + Cloud Firestore + Firebase Storage
+* **Maps & Geolocation:** Leaflet + OpenStreetMap + OpenStreetMap Nominatim
+* **Hosting:** Vercel
+
+---
+
+## 💻 Local Development Setup
+
+1. **Clone repository:**
+   ```bash
+   git clone https://github.com/samyakchordiya99-prog/Apnamart.git
+   cd Apnamart
    ```
+
+2. **Install dependencies:**
+   ```bash
    npm install
    ```
-2. Create env file:
+
+3. **Configure environment variables:**
+   ```bash
+   cp .env.example .env.local
    ```
-   copy .env.example .env.local
-   ```
-   Fill in your Firebase web app config (Project settings → General → Your apps). Do **not** add service-account / admin SDK keys to `.env.local`.
-3. Configure Firebase:
-   - Enable Email/Password (and optionally Google) in Firebase Authentication.
-   - Create a Firestore database.
-   - Paste `firestore.rules` into the Firestore Rules tab and publish.
-4. Run:
-   ```
+   Add your Firebase configuration credentials to `.env.local`.
+
+4. **Run development server:**
+   ```bash
    npm run dev
    ```
-   Open http://localhost:5173
+   Open `http://localhost:5173`
 
-## Notes
-- Account roles (customer / vendor) are chosen at signup and locked afterward; users cannot change their own role client-side (enforced by Firestore rules).
-- Location is only collected when the user clicks "Use My Current Location" or selects on the map. Continuous background tracking is not used.
-- Saving location to a profile requires explicit consent.
-- Google sign-in defaults new accounts to the customer role.
-
-## Production build
-```
-npm run build
-npm run preview
-```
+5. **Production Build:**
+   ```bash
+   npm run build
+   ```

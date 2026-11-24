@@ -1,43 +1,33 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  setupRecaptcha,
-  sendPhoneOtp,
-  verifyPhoneOtp,
-  formatPhoneNumber,
-} from '../services/auth';
-import type { ConfirmationResult } from 'firebase/auth';
+import { signInWithGoogle, signInWithEmail } from '../services/auth';
 import type { UserProfile } from '../types';
 
 type RoleTab = 'customer' | 'vendor' | 'admin';
 
 export function Login() {
   const navigate = useNavigate();
-  const { refreshProfile, loginWithProfile, user } = useAuth();
+  const { refreshProfile, loginWithProfile, loginAsDemo, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<RoleTab>('customer');
 
-  // ---- Customer / Phone OTP state ----
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpSent, setOtpSent] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [countdown, setCountdown] = useState(0);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  // Customer Email mode toggle
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPassword, setCustomerPassword] = useState('');
 
-  // ---- Vendor state ----
+  // Vendor state
   const [shopName, setShopName] = useState('');
   const [vendorPassword, setVendorPassword] = useState('');
   const [showVendorPw, setShowVendorPw] = useState(false);
 
-  // ---- Admin state ----
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
+  // Admin state
+  const [adminEmail, setAdminEmail] = useState('samyakchordiya99@gmail.com');
+  const [adminPassword, setAdminPassword] = useState('Samyak@123');
   const [showAdminPw, setShowAdminPw] = useState(false);
 
-  // ---- Shared state ----
+  // Status & loader
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -49,145 +39,93 @@ export function Login() {
     }
   }, [user, navigate]);
 
-  // OTP countdown
-  useEffect(() => {
-    if (countdown > 0) {
-      const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [countdown]);
-
-  // Cleanup reCAPTCHA on unmount
-  useEffect(() => {
-    return () => {
-      try {
-        if ((window as any).recaptchaVerifier) {
-          (window as any).recaptchaVerifier.clear();
-          (window as any).recaptchaVerifier = null;
-        }
-      } catch {}
-    };
-  }, []);
-
-  const clearError = () => setError(null);
+  const clearError = () => {
+    setError(null);
+    setStatusMsg(null);
+  };
 
   const switchTab = (tab: RoleTab) => {
     setActiveTab(tab);
     clearError();
-    setStatusMsg(null);
   };
 
   // ======================================================
-  //  CUSTOMER – Phone OTP handlers
+  //  CUSTOMER – GOOGLE / GMAIL LOGIN
   // ======================================================
-
-  async function handleSendOtp(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleGoogleLogin() {
     clearError();
-    const cleaned = formatPhoneNumber(phone);
-    if (!cleaned || cleaned.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
     setLoading(true);
-    setStatusMsg('Setting up verification…');
+    setStatusMsg('Connecting with Google / Gmail…');
     try {
-      const appVerifier = setupRecaptcha('recaptcha-container', 'invisible');
-      setStatusMsg(`Sending OTP to ${cleaned}…`);
-      const cr = await sendPhoneOtp(cleaned, appVerifier);
-      setConfirmationResult(cr);
-      setOtpSent(true);
-      setCountdown(60);
-      setStatusMsg(null);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
-      setStatusMsg(null);
-    }
-  }
-
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault();
-    clearError();
-    const otpStr = otp.join('');
-    if (otpStr.length < 6) {
-      setError('Please enter the full 6-digit OTP.');
-      return;
-    }
-    if (!confirmationResult) {
-      setError('Session expired. Please request a new OTP.');
-      setOtpSent(false);
-      return;
-    }
-    setLoading(true);
-    setStatusMsg('Verifying OTP…');
-    try {
-      const res = await verifyPhoneOtp(confirmationResult, otpStr);
+      const res = await signInWithGoogle();
       await refreshProfile();
       if (res.profile?.role === 'admin') navigate('/admin');
       else if (res.profile?.role === 'vendor') navigate('/vendor');
       else navigate('/home');
     } catch (err: any) {
-      setError(err?.message || 'OTP verification failed. Please try again.');
+      console.warn('Google sign-in popup error, checking fallback', err);
+      // Helpful error message if domain not whitelisted or cancelled
+      if (err?.message?.includes('popup-closed-by-user')) {
+        setError('Google sign-in was cancelled. Please try again.');
+      } else if (err?.message?.includes('unauthorized-domain')) {
+        setError('Firebase Auth domain not authorized yet. You can use Quick Demo Customer to test!');
+      } else {
+        setError(err?.message || 'Google sign-in could not be completed.');
+      }
     } finally {
       setLoading(false);
       setStatusMsg(null);
     }
   }
 
-  async function handleResendOtp() {
-    if (countdown > 0) return;
+  // Customer Email/Password Login
+  async function handleCustomerEmailLogin(e: React.FormEvent) {
+    e.preventDefault();
     clearError();
+    if (!customerEmail.trim() || !customerPassword) {
+      setError('Please enter both email and password.');
+      return;
+    }
     setLoading(true);
     try {
-      const appVerifier = setupRecaptcha('recaptcha-container', 'invisible');
-      const cr = await sendPhoneOtp(formatPhoneNumber(phone), appVerifier);
-      setConfirmationResult(cr);
-      setCountdown(60);
+      const res = await signInWithEmail(customerEmail.trim(), customerPassword);
+      await refreshProfile();
+      if (res.profile?.role === 'admin') navigate('/admin');
+      else if (res.profile?.role === 'vendor') navigate('/vendor');
+      else navigate('/home');
     } catch (err: any) {
-      setError(err?.message || 'Could not resend OTP.');
+      setError(err?.message || 'Invalid email or password.');
     } finally {
       setLoading(false);
     }
   }
 
-  function handleOtpBox(index: number, value: string) {
-    if (!/^\d*$/.test(value)) return;
-    const updated = [...otp];
-    updated[index] = value.slice(-1);
-    setOtp(updated);
-    if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  }
-
-  function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
+  // Quick Demo Customer
+  function handleDemoCustomer() {
+    loginAsDemo('customer');
+    navigate('/home');
   }
 
   // ======================================================
-  //  VENDOR – Shop name + password
+  //  VENDOR – SHOP NAME + PASSWORD
   // ======================================================
-
   async function handleVendorLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     if (!shopName.trim()) {
-      setError('Please enter your shop name.');
+      setError('Please select or enter your shop name.');
       return;
     }
     if (vendorPassword !== 'Apnamart@123') {
-      setError('Invalid vendor credentials. Please check your password.');
+      setError('Invalid vendor password. (Hint: Apnamart@123)');
       return;
     }
     setLoading(true);
     try {
+      const slug = shopName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
       const vendorProfile: UserProfile = {
-        uid: `vendor-${shopName.trim().toLowerCase().replace(/\s+/g, '-')}`,
-        email: `${shopName.trim().toLowerCase().replace(/\s+/g, '')}@vendor.com`,
+        uid: `vendor-${slug}`,
+        email: `${slug}@vendor.com`,
         displayName: shopName.trim(),
         role: 'vendor',
         createdAt: Date.now(),
@@ -203,15 +141,14 @@ export function Login() {
   }
 
   // ======================================================
-  //  ADMIN – Fixed credentials
+  //  ADMIN – FIXED CREDENTIALS
   // ======================================================
-
   async function handleAdminLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     const emailTrimmed = adminEmail.trim().toLowerCase();
     if (!emailTrimmed || !adminPassword) {
-      setError('Please enter both email and password.');
+      setError('Please enter both admin email and password.');
       return;
     }
     setLoading(true);
@@ -228,7 +165,7 @@ export function Login() {
         loginWithProfile(adminProfile);
         navigate('/admin');
       } else {
-        setError('Invalid admin credentials.');
+        setError('Invalid admin credentials. Please check email and password.');
       }
     } catch (err: any) {
       setError(err?.message || 'Admin login failed.');
@@ -237,38 +174,46 @@ export function Login() {
     }
   }
 
-  // ======================================================
-  //  RENDER
-  // ======================================================
-
   return (
     <div className="auth-split-page">
       {/* ---- LEFT BRAND PANEL ---- */}
       <div className="auth-brand-panel">
-        <div className="auth-brand-logo">
-          <span className="auth-brand-icon">🛒</span>
+        <div className="auth-brand-top">
+          <div className="auth-brand-logo">
+            <span className="auth-brand-icon">🛒</span>
+          </div>
+          <h1 className="auth-brand-name">
+            Apna<span className="auth-brand-accent">Mart</span>
+          </h1>
+          <p className="auth-brand-tagline">India's Neighborhood Kirana Delivery ⚡</p>
         </div>
-        <h1 className="auth-brand-name">
-          Apna<span className="auth-brand-accent">Mart</span>
-        </h1>
-        <p className="auth-brand-tagline">Groceries at lightning speed 🚚</p>
+
         <div className="auth-brand-features">
-          <div className="auth-feature-item">
-            <span>⚡</span>
-            <span>Fast delivery from local Kirana shops</span>
+          <div className="auth-feature-pill">
+            <span className="pill-icon">🚀</span>
+            <div>
+              <strong>10-15 Min Delivery</strong>
+              <small>From local trusted shops</small>
+            </div>
           </div>
-          <div className="auth-feature-item">
-            <span>🏪</span>
-            <span>2 shops — Ravi Kirana & Sharma General</span>
+          <div className="auth-feature-pill">
+            <span className="pill-icon">🏪</span>
+            <div>
+              <strong>Ravi Kirana & Sharma Stores</strong>
+              <small>Verified authentic products</small>
+            </div>
           </div>
-          <div className="auth-feature-item">
-            <span>💳</span>
-            <span>Pay via UPI or Cash on Delivery</span>
+          <div className="auth-feature-pill">
+            <span className="pill-icon">📍</span>
+            <div>
+              <strong>Live Delivery Tracking</strong>
+              <small>Real-time order updates</small>
+            </div>
           </div>
-          <div className="auth-feature-item">
-            <span>📍</span>
-            <span>Live order tracking at your doorstep</span>
-          </div>
+        </div>
+
+        <div className="auth-brand-footer">
+          <span>🔒 100% Secure & Verified Payments</span>
         </div>
       </div>
 
@@ -276,8 +221,8 @@ export function Login() {
       <div className="auth-form-panel">
         <div className="auth-form-card">
           <div className="auth-form-header">
-            <h2 className="auth-form-title">Welcome back</h2>
-            <p className="auth-form-subtitle">Sign in to continue shopping</p>
+            <h2 className="auth-form-title">Welcome to ApnaMart</h2>
+            <p className="auth-form-subtitle">Choose your portal to continue</p>
           </div>
 
           {/* Role Tabs */}
@@ -305,105 +250,138 @@ export function Login() {
             </button>
           </div>
 
-          {/* Error / Status */}
+          {/* Error / Status Alerts */}
           {error && (
             <div className="auth-alert error">
-              <span>⚠️</span> {error}
+              <span>⚠️</span> <div>{error}</div>
             </div>
           )}
           {statusMsg && (
             <div className="auth-alert info">
-              <span>ℹ️</span> {statusMsg}
+              <span>ℹ️</span> <div>{statusMsg}</div>
             </div>
           )}
 
           {/* ===================== CUSTOMER TAB ===================== */}
           {activeTab === 'customer' && (
-            <div>
-              {!otpSent ? (
-                <form onSubmit={handleSendOtp}>
-                  <div className="auth-field-group">
-                    <label className="auth-field-label">Mobile Number</label>
-                    <div className="auth-phone-row">
-                      <div className="auth-country-code">🇮🇳 +91</div>
-                      <input
-                        className="auth-input auth-phone-input"
-                        type="tel"
-                        placeholder="Enter 10-digit number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        maxLength={12}
-                        required
-                        autoFocus
-                      />
-                    </div>
-                    <span className="auth-hint">We'll send a 6-digit OTP via SMS</span>
-                  </div>
+            <div className="auth-tab-content">
+              {/* PRIMARY: DIRECT GMAIL / GOOGLE SIGN-IN */}
+              <div className="auth-gmail-box">
+                <button
+                  type="button"
+                  className="auth-google-btn"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                >
+                  <svg className="google-icon" viewBox="0 0 24 24" width="22" height="22">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                  </svg>
+                  <span>{loading ? 'Signing in…' : 'Sign in directly with Google (Gmail)'}</span>
+                </button>
+                <p className="auth-hint-center">Instant 1-click access with your Gmail account</p>
+              </div>
+
+              {/* OR DIVIDER */}
+              <div className="auth-divider-line">
+                <span>or continue with</span>
+              </div>
+
+              {/* TOGGLE EMAIL OR QUICK DEMO */}
+              {!showEmailForm ? (
+                <div className="auth-secondary-actions">
                   <button
-                    className="auth-btn auth-btn-customer"
-                    type="submit"
-                    disabled={loading || !phone.trim()}
+                    type="button"
+                    className="auth-btn-ghost"
+                    onClick={() => setShowEmailForm(true)}
                   >
-                    {loading ? '⏳ Sending…' : 'Send OTP →'}
+                    ✉️ Sign in with Email / Password
                   </button>
-                </form>
+                  <button
+                    type="button"
+                    className="auth-btn-demo"
+                    onClick={handleDemoCustomer}
+                  >
+                    ⚡ Test as Guest Customer (1-Click)
+                  </button>
+                </div>
               ) : (
-                <form onSubmit={handleVerifyOtp}>
-                  <div className="auth-otp-sent-info">
-                    <span>OTP sent to <strong>+91 {phone}</strong></span>
-                    <button
-                      type="button"
-                      className="auth-link-btn"
-                      onClick={() => { setOtpSent(false); setOtp(['','','','','','']); clearError(); }}
-                    >
-                      Change
-                    </button>
+                <form onSubmit={handleCustomerEmailLogin} className="auth-email-form">
+                  <div className="auth-field-group">
+                    <label className="auth-field-label">Email Address</label>
+                    <input
+                      className="auth-input"
+                      type="email"
+                      placeholder="you@gmail.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      required
+                      autoFocus
+                    />
                   </div>
                   <div className="auth-field-group">
-                    <label className="auth-field-label">Enter 6-digit OTP</label>
-                    <div className="auth-otp-boxes">
-                      {otp.map((digit, i) => (
-                        <input
-                          key={i}
-                          ref={(el) => { otpRefs.current[i] = el; }}
-                          className="auth-otp-box"
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleOtpBox(i, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                          autoFocus={i === 0}
-                        />
-                      ))}
-                    </div>
+                    <label className="auth-field-label">Password</label>
+                    <input
+                      className="auth-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value={customerPassword}
+                      onChange={(e) => setCustomerPassword(e.target.value)}
+                      required
+                    />
                   </div>
-                  <button
-                    className="auth-btn auth-btn-customer"
-                    type="submit"
-                    disabled={loading || otp.join('').length < 6}
-                  >
-                    {loading ? '⏳ Verifying…' : '✅ Verify & Login'}
+                  <button className="auth-btn auth-btn-customer" type="submit" disabled={loading}>
+                    {loading ? 'Logging in…' : 'Sign In with Email'}
                   </button>
-                  <div className="auth-resend-row">
+                  <div className="auth-sub-links">
                     <button
                       type="button"
-                      className="auth-link-btn"
-                      onClick={handleResendOtp}
-                      disabled={countdown > 0 || loading}
+                      className="auth-link-text"
+                      onClick={() => setShowEmailForm(false)}
                     >
-                      {countdown > 0 ? `Resend in ${countdown}s` : '🔄 Resend OTP'}
+                      ← Back to Google Sign-in
                     </button>
+                    <Link to="/signup" className="auth-link-text font-bold">
+                      Create account
+                    </Link>
                   </div>
                 </form>
               )}
-              <div id="recaptcha-container" ref={recaptchaContainerRef} />
             </div>
           )}
 
           {/* ===================== VENDOR TAB ===================== */}
           {activeTab === 'vendor' && (
-            <form onSubmit={handleVendorLogin}>
+            <form onSubmit={handleVendorLogin} className="auth-tab-content">
+              {/* Quick Shop Chips */}
+              <div className="auth-field-group">
+                <label className="auth-field-label">Choose Shop</label>
+                <div className="auth-chips-row">
+                  <button
+                    type="button"
+                    className={`auth-chip ${shopName === 'Ravi Kirana Store' ? 'active' : ''}`}
+                    onClick={() => {
+                      setShopName('Ravi Kirana Store');
+                      setVendorPassword('Apnamart@123');
+                    }}
+                  >
+                    🏪 Ravi Kirana
+                  </button>
+                  <button
+                    type="button"
+                    className={`auth-chip ${shopName === 'Sharma General Store' ? 'active' : ''}`}
+                    onClick={() => {
+                      setShopName('Sharma General Store');
+                      setVendorPassword('Apnamart@123');
+                    }}
+                  >
+                    🏪 Sharma General
+                  </button>
+                </div>
+              </div>
+
               <div className="auth-field-group">
                 <label className="auth-field-label">Shop Name</label>
                 <div className="auth-input-wrapper">
@@ -411,14 +389,14 @@ export function Login() {
                   <input
                     className="auth-input auth-input-icon-pad"
                     type="text"
-                    placeholder="e.g. Ravi Kirana Store"
+                    placeholder="Enter shop name"
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
                     required
-                    autoFocus
                   />
                 </div>
               </div>
+
               <div className="auth-field-group">
                 <label className="auth-field-label">Password</label>
                 <div className="auth-input-wrapper">
@@ -439,24 +417,22 @@ export function Login() {
                     {showVendorPw ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <span className="auth-hint">Password: Apnamart@123</span>
+                <span className="auth-hint">Default password: <code>Apnamart@123</code></span>
               </div>
+
               <button
                 className="auth-btn auth-btn-vendor"
                 type="submit"
                 disabled={loading || !shopName.trim() || !vendorPassword}
               >
-                {loading ? '⏳ Logging in…' : 'Enter Vendor Portal →'}
+                {loading ? 'Accessing…' : 'Enter Vendor Portal →'}
               </button>
-              <div className="auth-vendor-note">
-                <span>🔑</span> Use your shop name + vendor password to access your dashboard
-              </div>
             </form>
           )}
 
           {/* ===================== ADMIN TAB ===================== */}
           {activeTab === 'admin' && (
-            <form onSubmit={handleAdminLogin}>
+            <form onSubmit={handleAdminLogin} className="auth-tab-content">
               <div className="auth-field-group">
                 <label className="auth-field-label">Admin Email</label>
                 <div className="auth-input-wrapper">
@@ -464,22 +440,20 @@ export function Login() {
                   <input
                     className="auth-input auth-input-icon-pad"
                     type="email"
-                    placeholder="samyakchordiya99@gmail.com"
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     required
-                    autoFocus
                   />
                 </div>
               </div>
+
               <div className="auth-field-group">
-                <label className="auth-field-label">Password</label>
+                <label className="auth-field-label">Admin Password</label>
                 <div className="auth-input-wrapper">
                   <span className="auth-input-icon">🔐</span>
                   <input
                     className="auth-input auth-input-icon-pad"
                     type={showAdminPw ? 'text' : 'password'}
-                    placeholder="Enter admin password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     required
@@ -492,17 +466,16 @@ export function Login() {
                     {showAdminPw ? '🙈' : '👁️'}
                   </button>
                 </div>
+                <span className="auth-hint">Pre-filled credentials for Samyak (Admin)</span>
               </div>
+
               <button
                 className="auth-btn auth-btn-admin"
                 type="submit"
                 disabled={loading || !adminEmail.trim() || !adminPassword}
               >
-                {loading ? '⏳ Authenticating…' : '🔐 Access Admin Panel →'}
+                {loading ? 'Authenticating…' : '🔐 Access Master Admin →'}
               </button>
-              <div className="auth-admin-note">
-                <span>🛡️</span> Admin access is restricted to authorized personnel only
-              </div>
             </form>
           )}
         </div>

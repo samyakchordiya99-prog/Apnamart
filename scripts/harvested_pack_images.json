@@ -1,0 +1,153 @@
+{
+  "madhur_sugar": {
+    "productName": "sugar",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/602/690/0022/front_en.4.400.jpg"
+  },
+  "peanuts": {
+    "productName": "Myfitness Peanut Butter",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/432/760/0924/front_fr.3.400.jpg"
+  },
+  "red_label": {
+    "productName": "Red Label Natural care",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/103/088/2586/front_en.3.400.jpg"
+  },
+  "jowar": {
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/172/501/0812/front_en.3.400.jpg"
+  },
+  "ragi": {
+    "productName": "Tata soulfull Ragi Bites",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/800/298/4361/front_en.3.400.jpg"
+  },
+  "poha": {
+    "productName": "Poha",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/800/387/2315/front_en.4.400.jpg"
+  },
+  "toor_dal": {
+    "productName": "Unpolished Toor Dal",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/404/392/6216/front_en.5.400.jpg"
+  },
+  "chana_dal": {
+    "productName": "Chana dal",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/601/050/0702/front_en.5.400.jpg"
+  },
+  "urad_dal": {
+    "productName": "Urad Dal",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/290/102/7280/front_en.5.400.jpg"
+  },
+  "marie_gold": {
+    "productName": "Marie Gold Biscuit",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/106/316/2914/front_en.3.400.jpg"
+  },
+  "parle_g": {
+    "productName": "Parle-G Biscuit",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/171/913/4845/front_en.11.400.jpg"
+  },
+  "dark_fantasy": {
+    "productName": "Dark fantasy bourbon",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/172/501/6258/front_en.20.400.jpg"
+  },
+  "krackjack": {
+    "productName": "Krackjack",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/171/913/5248/front_en.25.400.jpg"
+  },
+  "monaco": {
+    "productName": "MONACO",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/171/913/5118/front_en.24.400.jpg"
+  },
+  "maggi": {
+    "productName": "maggi",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/105/801/7687/front_en.13.400.jpg"
+  },
+  "lays_magic": {
+    "productName": "Lays India's Magic Masala",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/149/150/3020/front_en.35.400.jpg"
+  },
+  "kurkure": {
+    "productName": "Kurkure Masala Munch",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/149/136/1026/front_en.51.400.jpg"
+  },
+  "uncle_chipps": {
+    "productName": "Potato chips (Spicy Treat flavour)20rs",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/149/143/5109/front_en.18.400.jpg"
+  },
+  "bingo": {
+    "productName": "Bingo! Mad Angles Achaari Masti",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/172/501/3684/front_en.24.400.jpg"
+  },
+  "doritos": {
+    "productName": "Doritos",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/149/199/0219/front_fr.3.400.jpg"
+  },
+  "bhujia_sev": {
+    "productName": "Aloo Bhujia Sev",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/400/440/0731/front_en.28.400.jpg"
+  },
+  "parachue_oil": {
+    "productName": "Coconut oil",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/000/008/900/2940/front_en.7.400.jpg"
+  },
+  "thums_up": {
+    "productName": "Thums up",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/176/404/2911/front_en.41.400.jpg"
+  },
+  "coca_cola": {
+    "productName": "Coca-Cola Original",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/544/900/000/0996/front_en.1129.400.jpg"
+  },
+  "pepsi": {
+    "productName": "Pepsi",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/208/010/4581/front_en.3.400.jpg"
+  },
+  "tata_tea_premium": {
+    "productName": "Premium",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/105/201/0615/front_en.18.400.jpg"
+  },
+  "oreo_original": {
+    "productName": "Original Oreo",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/762/220/222/5512/front_en.28.400.jpg"
+  },
+  "hide_seek_choco": {
+    "productName": "parle hide & seek 120g",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/171/910/5913/front_en.22.400.jpg"
+  },
+  "amul_cheese_slices": {
+    "productName": "malai paneer fresh",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/126/218/0115/front_en.6.400.jpg"
+  },
+  "amul_pure_ghee": {
+    "productName": "Amul Ghee 1ltr",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/126/203/0151/front_fr.9.400.jpg"
+  },
+  "saffola_gold": {
+    "productName": "Saffola Masala Oats - Classic Masala",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/108/806/8734/front_en.19.400.jpg"
+  },
+  "peanuts_raw": {
+    "productName": "Myfitness Peanut Butter",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/432/760/0924/front_fr.3.400.jpg"
+  },
+  "surf_excel": {
+    "productName": "Surf Excel Easy Wash Blue",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/910/602/6346/front_en.8.400.jpg"
+  },
+  "vim_bar": {
+    "productName": "Maha Bar",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/103/053/5697/front_en.21.400.jpg"
+  },
+  "dettol_soap": {
+    "productName": "Dettol Sanitizer",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/890/139/638/1501/front_en.3.400.jpg"
+  },
+  "pringles": {
+    "productName": "Pringles Sour Cream & Onion Flavour Potato Crisps",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/888/646/712/2408/front_en.10.400.jpg"
+  },
+  "cadbury_dairy_milk": {
+    "productName": "Perly",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/611/124/210/0992/front_en.216.400.jpg"
+  },
+  "quaker_oats": {
+    "productName": "Quaker White Oats",
+    "imageUrl": "https://images.openfoodfacts.org/images/products/500/010/847/8119/front_en.88.400.jpg"
+  }
+}

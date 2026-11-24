@@ -1,0 +1,30 @@
+{
+  "dairy_milk": {
+    "name": "dairy milk",
+    "img": "https://images.openfoodfacts.org/images/products/762/220/233/4009/front_en.9.400.jpg"
+  },
+  "harpic": {
+    "name": "Power Plus 10x Max Clean",
+    "img": "https://images.openfoodfacts.org/images/products/890/139/615/2002/front_en.21.400.jpg"
+  },
+  "lizol": {
+    "name": "Lizol floral 2l + 500ml",
+    "img": "https://images.openfoodfacts.org/images/products/890/139/611/6004/front_en.3.400.jpg"
+  },
+  "red_bull": {
+    "name": "Red Bull Energy Drink",
+    "img": "https://images.openfoodfacts.org/images/products/000/009/016/2602/front_en.151.400.jpg"
+  },
+  "nescafe_classic": {
+    "name": "NESCAFE classic",
+    "img": "https://images.openfoodfacts.org/images/products/000/008/900/9758/front_en.3.400.jpg"
+  },
+  "yellow_moong_dal": {
+    "name": "Unpolished Moong Dal",
+    "img": "https://images.openfoodfacts.org/images/products/890/404/392/6315/front_en.23.400.jpg"
+  },
+  "kabuli_chana": {
+    "name": "Tata sampann unpolished kabuli chana",
+    "img": "https://images.openfoodfacts.org/images/products/890/404/392/6704/front_en.3.400.jpg"
+  }
+}

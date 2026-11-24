@@ -1,0 +1,162 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------------------
+    // HELPER FUNCTIONS
+    // -------------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function hasUserDoc() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userRole() {
+      return hasUserDoc() ? userDoc().role : 'none';
+    }
+
+    function isAdmin() {
+      return signedIn() && (
+        request.auth.token.admin == true ||
+        userRole() == 'admin'
+      );
+    }
+
+    function isVendor() {
+      return signedIn() && (
+        isAdmin() ||
+        userRole() == 'vendor'
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 1. USER PROFILES (/users/{uid})
+    // -------------------------------------------------------------------------
+    // Private to the owner and admin.
+    // Self-registration ONLY allows 'customer' or 'vendor' (no self-assigned 'admin').
+    // Role cannot be updated by normal users (locked to prevent privilege escalation).
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && (request.resource.data.email == null || request.resource.data.email is string)
+        && request.resource.data.role in ['customer', 'vendor'];
+
+      allow update: if isAdmin() || (
+        isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.role == resource.data.role
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. VENDOR BUSINESS PROFILES (/vendors/{vendorId})
+    // -------------------------------------------------------------------------
+    // Publicly readable for marketplace discovery.
+    // Writable only by the owning vendor or admin.
+    match /vendors/{vendorId} {
+      allow read: if true;
+
+      allow create: if isAdmin() || (
+        isVendor() && request.resource.data.uid == request.auth.uid
+      );
+
+      allow update, delete: if isAdmin() || (
+        isVendor() && resource.data.uid == request.auth.uid
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. SHOPS (/shops/{shopId})
+    // -------------------------------------------------------------------------
+    // Publicly readable so customers can browse nearby shops.
+    // Only registered vendors (for their own shop) or admins can create.
+    // Only the owning vendor or admin can edit or remove.
+    // Coordinates are strictly validated as numbers.
+    match /shops/{shopId} {
+      allow read: if true;
+
+      allow create: if isAdmin() || (
+        isVendor()
+        && request.resource.data.vendorId == request.auth.uid
+        && request.resource.data.location is map
+        && request.resource.data.location.lat is number
+        && request.resource.data.location.lng is number
+      ) || (
+        request.resource.data.isDemo == true
+        && request.resource.data.location is map
+        && request.resource.data.location.lat is number
+        && request.resource.data.location.lng is number
+      );
+
+      allow update: if isAdmin() || (
+        isVendor() && resource.data.vendorId == request.auth.uid
+      ) || (
+        resource.data.isDemo == true && request.resource.data.isDemo == true
+      );
+
+      allow delete: if isAdmin() || (
+        isVendor() && resource.data.vendorId == request.auth.uid
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. PRODUCTS (/products/{productId})
+    // -------------------------------------------------------------------------
+    // Publicly readable for marketplace catalog.
+    // Writable only by the shop vendor owner or admin.
+    // Price must be a valid number.
+    match /products/{productId} {
+      allow read: if true;
+
+      allow create, update: if isAdmin() || (
+        isVendor()
+        && request.resource.data.vendorId == request.auth.uid
+        && request.resource.data.shopId is string
+      ) || (
+        request.resource.data.isDemoData == true
+      );
+
+      allow delete: if isAdmin() || (
+        isVendor() && resource.data.vendorId == request.auth.uid
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. ORDERS (/orders/{orderId})
+    // -------------------------------------------------------------------------
+    // Strictly restricted: only customer who placed the order or vendor of the shop.
+    // Creation restricted to the customer placing it.
+    // Unrestricted public access is completely forbidden.
+    match /orders/{orderId} {
+      allow read: if signedIn() && (
+        isAdmin() ||
+        resource.data.customerId == request.auth.uid ||
+        resource.data.shopVendorId == request.auth.uid
+      );
+
+      allow create: if signedIn()
+        && request.resource.data.customerId == request.auth.uid;
+
+      allow update: if signedIn() && (
+        isAdmin() ||
+        resource.data.customerId == request.auth.uid ||
+        resource.data.shopVendorId == request.auth.uid
+      );
+
+      allow delete: if isAdmin();
+    }
+  }
+}

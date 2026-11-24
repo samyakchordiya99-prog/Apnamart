@@ -1,21 +1,34 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { signInWithGoogle, signInWithEmail } from '../services/auth';
+import {
+  signInWithGoogle,
+  setupRecaptcha,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  formatPhoneNumber,
+} from '../services/auth';
+import type { ConfirmationResult } from 'firebase/auth';
 import type { UserProfile } from '../types';
 
 type RoleTab = 'customer' | 'vendor' | 'admin';
+type CustomerAuthMethod = 'phone' | 'google';
 
 export function Login() {
   const navigate = useNavigate();
   const { refreshProfile, loginWithProfile, loginAsDemo, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<RoleTab>('customer');
+  const [customerMethod, setCustomerMethod] = useState<CustomerAuthMethod>('phone');
 
-  // Customer Email mode toggle
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPassword, setCustomerPassword] = useState('');
+  // Phone OTP state
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpSent, setOtpSent] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   // Vendor state
   const [shopName, setShopName] = useState('');
@@ -27,7 +40,7 @@ export function Login() {
   const [adminPassword, setAdminPassword] = useState('Samyak@123');
   const [showAdminPw, setShowAdminPw] = useState(false);
 
-  // Status & loader
+  // Status & loaders
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -38,6 +51,26 @@ export function Login() {
       navigate('/home');
     }
   }, [user, navigate]);
+
+  // Countdown for OTP
+  useEffect(() => {
+    if (countdown > 0) {
+      const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [countdown]);
+
+  // Cleanup recaptcha on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if ((window as any).recaptchaVerifier) {
+          (window as any).recaptchaVerifier.clear();
+          (window as any).recaptchaVerifier = null;
+        }
+      } catch {}
+    };
+  }, []);
 
   const clearError = () => {
     setError(null);
@@ -50,7 +83,97 @@ export function Login() {
   };
 
   // ======================================================
-  //  CUSTOMER – GOOGLE / GMAIL LOGIN
+  //  CUSTOMER: PHONE NUMBER OTP
+  // ======================================================
+  async function handleSendOtp(e: React.FormEvent) {
+    e.preventDefault();
+    clearError();
+    const cleaned = formatPhoneNumber(phone);
+    if (!cleaned || cleaned.length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setLoading(true);
+    setStatusMsg('Preparing reCAPTCHA verification…');
+    try {
+      const appVerifier = setupRecaptcha('recaptcha-container', 'invisible');
+      setStatusMsg(`Sending OTP to ${cleaned}…`);
+      const cr = await sendPhoneOtp(cleaned, appVerifier);
+      setConfirmationResult(cr);
+      setOtpSent(true);
+      setCountdown(60);
+      setStatusMsg(null);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send OTP. Please check the mobile number.');
+    } finally {
+      setLoading(false);
+      setStatusMsg(null);
+    }
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    clearError();
+    const otpStr = otp.join('');
+    if (otpStr.length < 6) {
+      setError('Please enter the complete 6-digit OTP code.');
+      return;
+    }
+    if (!confirmationResult) {
+      setError('Session expired. Please request a new OTP code.');
+      setOtpSent(false);
+      return;
+    }
+    setLoading(true);
+    setStatusMsg('Verifying OTP code…');
+    try {
+      const res = await verifyPhoneOtp(confirmationResult, otpStr);
+      await refreshProfile();
+      if (res.profile?.role === 'admin') navigate('/admin');
+      else if (res.profile?.role === 'vendor') navigate('/vendor');
+      else navigate('/home');
+    } catch (err: any) {
+      setError(err?.message || 'OTP verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+      setStatusMsg(null);
+    }
+  }
+
+  async function handleResendOtp() {
+    if (countdown > 0) return;
+    clearError();
+    setLoading(true);
+    try {
+      const appVerifier = setupRecaptcha('recaptcha-container', 'invisible');
+      const cr = await sendPhoneOtp(formatPhoneNumber(phone), appVerifier);
+      setConfirmationResult(cr);
+      setCountdown(60);
+    } catch (err: any) {
+      setError(err?.message || 'Could not resend OTP.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleOtpDigit(index: number, val: string) {
+    if (!/^\d*$/.test(val)) return;
+    const nextOtp = [...otp];
+    nextOtp[index] = val.slice(-1);
+    setOtp(nextOtp);
+    if (val && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  }
+
+  // ======================================================
+  //  CUSTOMER: GOOGLE / GMAIL LOGIN
   // ======================================================
   async function handleGoogleLogin() {
     clearError();
@@ -63,40 +186,19 @@ export function Login() {
       else if (res.profile?.role === 'vendor') navigate('/vendor');
       else navigate('/home');
     } catch (err: any) {
-      console.warn('Google sign-in popup error, checking fallback', err);
-      // Helpful error message if domain not whitelisted or cancelled
-      if (err?.message?.includes('popup-closed-by-user')) {
-        setError('Google sign-in was cancelled. Please try again.');
-      } else if (err?.message?.includes('unauthorized-domain')) {
-        setError('Firebase Auth domain not authorized yet. You can use Quick Demo Customer to test!');
+      console.warn('Google sign-in error:', err);
+      if (err?.message?.includes('unauthorized-domain')) {
+        setError(
+          'Firebase Domain Not Authorized: In Firebase Console -> Authentication -> Settings -> Authorized Domains, add "apnamart-teal.vercel.app". Or use Phone Login / Quick Guest below!'
+        );
+      } else if (err?.message?.includes('popup-closed-by-user')) {
+        setError('Google sign-in was closed before completion. Please try again.');
       } else {
-        setError(err?.message || 'Google sign-in could not be completed.');
+        setError(err?.message || 'Google sign-in failed.');
       }
     } finally {
       setLoading(false);
       setStatusMsg(null);
-    }
-  }
-
-  // Customer Email/Password Login
-  async function handleCustomerEmailLogin(e: React.FormEvent) {
-    e.preventDefault();
-    clearError();
-    if (!customerEmail.trim() || !customerPassword) {
-      setError('Please enter both email and password.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await signInWithEmail(customerEmail.trim(), customerPassword);
-      await refreshProfile();
-      if (res.profile?.role === 'admin') navigate('/admin');
-      else if (res.profile?.role === 'vendor') navigate('/vendor');
-      else navigate('/home');
-    } catch (err: any) {
-      setError(err?.message || 'Invalid email or password.');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -107,13 +209,13 @@ export function Login() {
   }
 
   // ======================================================
-  //  VENDOR – SHOP NAME + PASSWORD
+  //  VENDOR LOGIN
   // ======================================================
   async function handleVendorLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     if (!shopName.trim()) {
-      setError('Please select or enter your shop name.');
+      setError('Please enter or select your shop name.');
       return;
     }
     if (vendorPassword !== 'Apnamart@123') {
@@ -141,14 +243,14 @@ export function Login() {
   }
 
   // ======================================================
-  //  ADMIN – FIXED CREDENTIALS
+  //  ADMIN LOGIN
   // ======================================================
   async function handleAdminLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     const emailTrimmed = adminEmail.trim().toLowerCase();
     if (!emailTrimmed || !adminPassword) {
-      setError('Please enter both admin email and password.');
+      setError('Please enter admin email and password.');
       return;
     }
     setLoading(true);
@@ -165,7 +267,7 @@ export function Login() {
         loginWithProfile(adminProfile);
         navigate('/admin');
       } else {
-        setError('Invalid admin credentials. Please check email and password.');
+        setError('Invalid admin credentials.');
       }
     } catch (err: any) {
       setError(err?.message || 'Admin login failed.');
@@ -193,27 +295,27 @@ export function Login() {
             <span className="pill-icon">🚀</span>
             <div>
               <strong>10-15 Min Delivery</strong>
-              <small>From local trusted shops</small>
+              <small>Delivered fresh from local stores</small>
             </div>
           </div>
           <div className="auth-feature-pill">
             <span className="pill-icon">🏪</span>
             <div>
-              <strong>Ravi Kirana & Sharma Stores</strong>
-              <small>Verified authentic products</small>
+              <strong>Ravi Kirana & Sharma General</strong>
+              <small>Real inventory with verified prices</small>
             </div>
           </div>
           <div className="auth-feature-pill">
             <span className="pill-icon">📍</span>
             <div>
-              <strong>Live Delivery Tracking</strong>
-              <small>Real-time order updates</small>
+              <strong>Doorstep GPS Tracking</strong>
+              <small>Real-time delivery partner coordinates</small>
             </div>
           </div>
         </div>
 
         <div className="auth-brand-footer">
-          <span>🔒 100% Secure & Verified Payments</span>
+          <span>🔒 Safe, verified & SSL-encrypted platform</span>
         </div>
       </div>
 
@@ -222,7 +324,7 @@ export function Login() {
         <div className="auth-form-card">
           <div className="auth-form-header">
             <h2 className="auth-form-title">Welcome to ApnaMart</h2>
-            <p className="auth-form-subtitle">Choose your portal to continue</p>
+            <p className="auth-form-subtitle">Select your login portal to proceed</p>
           </div>
 
           {/* Role Tabs */}
@@ -250,7 +352,7 @@ export function Login() {
             </button>
           </div>
 
-          {/* Error / Status Alerts */}
+          {/* Alerts */}
           {error && (
             <div className="auth-alert error">
               <span>⚠️</span> <div>{error}</div>
@@ -265,99 +367,173 @@ export function Login() {
           {/* ===================== CUSTOMER TAB ===================== */}
           {activeTab === 'customer' && (
             <div className="auth-tab-content">
-              {/* PRIMARY: DIRECT GMAIL / GOOGLE SIGN-IN */}
-              <div className="auth-gmail-box">
+              {/* Method Sub-Tabs: Phone OTP or Google */}
+              <div className="auth-method-switcher">
                 <button
                   type="button"
-                  className="auth-google-btn"
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
+                  className={`auth-method-btn ${customerMethod === 'phone' ? 'active' : ''}`}
+                  onClick={() => {
+                    setCustomerMethod('phone');
+                    clearError();
+                  }}
                 >
-                  <svg className="google-icon" viewBox="0 0 24 24" width="22" height="22">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                  </svg>
-                  <span>{loading ? 'Signing in…' : 'Sign in directly with Google (Gmail)'}</span>
+                  📱 Mobile (OTP)
                 </button>
-                <p className="auth-hint-center">Instant 1-click access with your Gmail account</p>
+                <button
+                  type="button"
+                  className={`auth-method-btn ${customerMethod === 'google' ? 'active' : ''}`}
+                  onClick={() => {
+                    setCustomerMethod('google');
+                    clearError();
+                  }}
+                >
+                  🌐 Google (Gmail)
+                </button>
               </div>
 
-              {/* OR DIVIDER */}
-              <div className="auth-divider-line">
-                <span>or continue with</span>
-              </div>
+              {/* METHOD 1: PHONE NUMBER WITH OTP */}
+              {customerMethod === 'phone' && (
+                <div>
+                  {!otpSent ? (
+                    <form onSubmit={handleSendOtp}>
+                      <div className="auth-field-group">
+                        <label className="auth-field-label">Mobile Number</label>
+                        <div className="auth-phone-row">
+                          <div className="auth-country-code">🇮🇳 +91</div>
+                          <input
+                            className="auth-input auth-phone-input"
+                            type="tel"
+                            placeholder="Enter 10-digit number"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                            maxLength={10}
+                            required
+                            autoFocus
+                          />
+                        </div>
+                        <span className="auth-hint">We'll send an official SMS code to verify.</span>
+                      </div>
+                      <button
+                        className="auth-btn auth-btn-customer"
+                        type="submit"
+                        disabled={loading || phone.trim().length < 10}
+                      >
+                        {loading ? 'Sending OTP…' : '📲 Send Verification OTP'}
+                      </button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleVerifyOtp}>
+                      <div className="auth-otp-sent-info">
+                        <span>
+                          Code sent to: <strong>+91 {phone}</strong>
+                        </span>
+                        <button
+                          type="button"
+                          className="auth-link-text font-bold"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setOtp(['', '', '', '', '', '']);
+                            clearError();
+                          }}
+                        >
+                          Change Number
+                        </button>
+                      </div>
 
-              {/* TOGGLE EMAIL OR QUICK DEMO */}
-              {!showEmailForm ? (
-                <div className="auth-secondary-actions">
-                  <button
-                    type="button"
-                    className="auth-btn-ghost"
-                    onClick={() => setShowEmailForm(true)}
-                  >
-                    ✉️ Sign in with Email / Password
-                  </button>
-                  <button
-                    type="button"
-                    className="auth-btn-demo"
-                    onClick={handleDemoCustomer}
-                  >
-                    ⚡ Test as Guest Customer (1-Click)
-                  </button>
+                      <div className="auth-field-group">
+                        <label className="auth-field-label">Enter 6-Digit OTP</label>
+                        <div className="auth-otp-boxes">
+                          {otp.map((digit, i) => (
+                            <input
+                              key={i}
+                              ref={(el) => {
+                                otpRefs.current[i] = el;
+                              }}
+                              className="auth-otp-box"
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onChange={(e) => handleOtpDigit(i, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                              autoFocus={i === 0}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        className="auth-btn auth-btn-customer"
+                        type="submit"
+                        disabled={loading || otp.join('').length < 6}
+                      >
+                        {loading ? 'Verifying OTP…' : '✅ Verify & Continue'}
+                      </button>
+
+                      <div className="auth-resend-row">
+                        <button
+                          type="button"
+                          className="auth-link-text"
+                          onClick={handleResendOtp}
+                          disabled={countdown > 0 || loading}
+                        >
+                          {countdown > 0 ? `Resend OTP in ${countdown}s` : '🔄 Resend OTP Code'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                  <div id="recaptcha-container" ref={recaptchaContainerRef} />
                 </div>
-              ) : (
-                <form onSubmit={handleCustomerEmailLogin} className="auth-email-form">
-                  <div className="auth-field-group">
-                    <label className="auth-field-label">Email Address</label>
-                    <input
-                      className="auth-input"
-                      type="email"
-                      placeholder="you@gmail.com"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <div className="auth-field-group">
-                    <label className="auth-field-label">Password</label>
-                    <input
-                      className="auth-input"
-                      type="password"
-                      placeholder="••••••••"
-                      value={customerPassword}
-                      onChange={(e) => setCustomerPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <button className="auth-btn auth-btn-customer" type="submit" disabled={loading}>
-                    {loading ? 'Logging in…' : 'Sign In with Email'}
-                  </button>
-                  <div className="auth-sub-links">
-                    <button
-                      type="button"
-                      className="auth-link-text"
-                      onClick={() => setShowEmailForm(false)}
-                    >
-                      ← Back to Google Sign-in
-                    </button>
-                    <Link to="/signup" className="auth-link-text font-bold">
-                      Create account
-                    </Link>
-                  </div>
-                </form>
               )}
+
+              {/* METHOD 2: GOOGLE / GMAIL */}
+              {customerMethod === 'google' && (
+                <div className="auth-gmail-box">
+                  <button
+                    type="button"
+                    className="auth-google-btn"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                  >
+                    <svg className="google-icon" viewBox="0 0 24 24" width="22" height="22">
+                      <path
+                        fill="#4285F4"
+                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                      />
+                    </svg>
+                    <span>{loading ? 'Connecting Google…' : 'Sign in with Google (Gmail)'}</span>
+                  </button>
+                  <p className="auth-hint-center">Instant 1-click login with your Google account</p>
+                </div>
+              )}
+
+              {/* Instant 1-Click Guest Test */}
+              <div className="auth-divider-line">
+                <span>or instant access</span>
+              </div>
+              <button type="button" className="auth-btn-demo" onClick={handleDemoCustomer}>
+                ⚡ Browse Instantly as Guest Customer (1-Click)
+              </button>
             </div>
           )}
 
           {/* ===================== VENDOR TAB ===================== */}
           {activeTab === 'vendor' && (
             <form onSubmit={handleVendorLogin} className="auth-tab-content">
-              {/* Quick Shop Chips */}
               <div className="auth-field-group">
-                <label className="auth-field-label">Choose Shop</label>
+                <label className="auth-field-label">Quick Shop Selection</label>
                 <div className="auth-chips-row">
                   <button
                     type="button"
@@ -417,7 +593,9 @@ export function Login() {
                     {showVendorPw ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <span className="auth-hint">Default password: <code>Apnamart@123</code></span>
+                <span className="auth-hint">
+                  Password: <code>Apnamart@123</code>
+                </span>
               </div>
 
               <button

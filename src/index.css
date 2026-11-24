@@ -224,6 +224,111 @@
   border: 1px solid #bfdbfe;
 }
 
+/* Customer Method Switcher (Phone vs Google) */
+.auth-method-switcher {
+  display: flex;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.auth-method-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748b;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.auth-method-btn:hover {
+  color: #0f172a;
+}
+.auth-method-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Phone row & Country flag */
+.auth-phone-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.auth-country-code {
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.auth-phone-input {
+  flex: 1;
+}
+
+/* OTP verification box */
+.auth-otp-sent-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #166534;
+  margin-bottom: 14px;
+}
+.auth-otp-boxes {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.auth-otp-box {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+  color: #0f172a;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+.auth-otp-box:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+.auth-resend-row {
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* Remove main padding on Auth pages so no white space at top */
+.main.main-auth {
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.app-shell.auth-mode {
+  min-height: 100vh;
+}
+
 /* Google Sign-in Box */
 .auth-gmail-box {
   margin-bottom: 14px;

@@ -697,6 +697,8 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
   for (const delId of deletedIds) {
     productMap.delete(delId);
   }
+  productMap.delete('SHOP_01_PROD_004');
+  productMap.delete('SHOP_01_PROD_007');
 
   // 5. Convert map to array — preserve pristine catalog order from demoList
   const demoOrderMap = new Map<string, number>();
@@ -818,6 +820,8 @@ export async function listAllProducts(): Promise<Product[]> {
   for (const delId of deletedIds) {
     map.delete(delId);
   }
+  map.delete('SHOP_01_PROD_004');
+  map.delete('SHOP_01_PROD_007');
 
   const allResult = Array.from(map.values()).sort((a, b) => {
     const aKey = a.productId || a.id;

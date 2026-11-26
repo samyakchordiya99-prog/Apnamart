@@ -302,27 +302,6 @@ export function CustomerHome() {
         </div>
       )}
 
-      {/* DEMONSTRATION NOTICE */}
-      <div
-        className="alert info"
-        style={{
-          marginTop: '16px',
-          borderLeft: '4px solid var(--purple)',
-          background: '#f5f3ff',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}
-      >
-        <span style={{ fontSize: '20px' }}>ℹ️</span>
-        <div>
-          <strong>College Demonstration Mode:</strong>
-          <span style={{ display: 'block', fontSize: '13px', color: '#4b5563', marginTop: '2px' }}>
-            Verified real Kirana businesses are not registered for this exact location. Exactly two clearly labeled fictional demo Kirana shops have been generated around your delivery location within 3 km and saved to Cloud Firestore.
-          </span>
-        </div>
-      </div>
-
       {/* NEARBY KIRANA SHOPS SECTION */}
       <div className="section" style={{ marginTop: '20px' }}>
         <div className="row between gap align-center" style={{ marginBottom: '16px', flexWrap: 'wrap' }}>

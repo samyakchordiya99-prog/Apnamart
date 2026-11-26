@@ -3,7 +3,7 @@ export interface GeoPosition { lat: number; lng: number; }
 export interface ReverseGeocodeResult {
   address: string;
   isApproximate: boolean;
-  provider: 'google' | 'nominatim' | 'coordinates';
+  provider: 'google' | 'bigdatacloud' | 'nominatim' | 'coordinates';
 }
 
 export function haversineKm(a: GeoPosition, b: GeoPosition): number {
@@ -40,6 +40,14 @@ export const MAP_LAYERS = {
   },
 } as const;
 
+// In-memory cache for ultra-fast location re-use
+const reverseGeocodeCache = new Map<string, ReverseGeocodeResult>();
+const forwardGeocodeCache = new Map<string, { lat: number; lng: number; address: string }>();
+
+/**
+ * High-performance browser geolocation.
+ * Uses sensible caching (60s) and fast fallback to prevent desktop browser freezing or long timeouts.
+ */
 export function getCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!('geolocation' in navigator)) {
@@ -48,14 +56,7 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
     }
 
     const validateAndResolve = (pos: GeolocationPosition) => {
-      const { latitude, longitude, accuracy } = pos.coords;
-      console.log('[Geolocation] Position fix acquired:', {
-        latitude,
-        longitude,
-        accuracyMeters: accuracy,
-        timestamp: new Date(pos.timestamp).toLocaleTimeString(),
-      });
-
+      const { latitude, longitude } = pos.coords;
       if (typeof latitude !== 'number' || typeof longitude !== 'number' || isNaN(latitude) || isNaN(longitude)) {
         reject(new Error('Invalid coordinates received from device.'));
         return;
@@ -64,38 +65,31 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
         reject(new Error(`Coordinates out of range: lat=${latitude}, lng=${longitude}`));
         return;
       }
-
       resolve(pos);
     };
 
-    console.log('[Geolocation] Requesting fresh GPS coordinates (highAccuracy: true)...');
+    // First attempt: fast response with 30s cache allowance
     navigator.geolocation.getCurrentPosition(
       validateAndResolve,
-      (firstErr) => {
-        // If high accuracy times out or position is unavailable, try standard accuracy fallback
-        if (firstErr.code === 3 || firstErr.code === 2) {
-          console.warn('[Geolocation] High accuracy request timed out or unavailable, attempting standard accuracy fallback...');
-          navigator.geolocation.getCurrentPosition(
-            validateAndResolve,
-            (fallbackErr) => {
-              console.warn('[Geolocation] Fallback request failed:', fallbackErr);
-              reject(fallbackErr);
-            },
-            {
-              enableHighAccuracy: false,
-              timeout: 10000,
-              maximumAge: 60000,
-            }
-          );
-        } else {
-          console.warn('[Geolocation] Geolocation error:', firstErr);
-          reject(firstErr);
-        }
+      (_firstErr) => {
+        // Fallback: standard accuracy with longer maximumAge returns instantly on Wi-Fi/IP
+        navigator.geolocation.getCurrentPosition(
+          validateAndResolve,
+          (fallbackErr) => {
+            console.warn('[Geolocation] Fallback request failed:', fallbackErr);
+            reject(fallbackErr);
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 300000, // 5 min cache
+          }
+        );
       },
       {
         enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 0, // CRITICAL: Never return a stale cached position
+        timeout: 4500, // Quick timeout (4.5s) to avoid UI hang
+        maximumAge: 30000, // 30s cache gives instant response
       }
     );
   });
@@ -118,33 +112,79 @@ export const hasValidGoogleKey = typeof googleMapsKey === 'string' &&
   googleMapsKey.trim().length > 0 &&
   !googleMapsKey.includes('YOUR_GOOGLE_MAPS_API_KEY');
 
+/**
+ * Ultra-fast reverse geocoding with multi-tier fallback:
+ * 1. Cache hit (0ms)
+ * 2. Google Maps (if key present)
+ * 3. BigDataCloud client API (free, ~100-200ms, optimized for Indian/global CDNs)
+ * 4. OpenStreetMap Nominatim with strict 2.5s timeout
+ * 5. Instant clean fallback
+ */
 export async function reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodeResult> {
-  // 1. Try Google Maps Geocoding API if a valid key is provided
+  const cacheKey = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  if (reverseGeocodeCache.has(cacheKey)) {
+    return reverseGeocodeCache.get(cacheKey)!;
+  }
+
+  // 1. Google Maps Geocoding API if key configured
   if (hasValidGoogleKey) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${googleMapsKey}`;
-      const gRes = await fetch(gUrl);
+      const gRes = await fetch(gUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (gRes.ok) {
         const gData = await gRes.json();
         if (gData.status === 'OK' && gData.results?.[0]) {
           const first = gData.results[0];
-          const isApprox = first.geometry?.location_type === 'APPROXIMATE';
-          return {
+          const result: ReverseGeocodeResult = {
             address: first.formatted_address,
-            isApproximate: isApprox,
+            isApproximate: first.geometry?.location_type === 'APPROXIMATE',
             provider: 'google',
           };
+          reverseGeocodeCache.set(cacheKey, result);
+          return result;
         }
       }
-    } catch (err) {
-      console.warn('[Geocoding] Google geocoding failed, falling back to OpenStreetMap:', err);
-    }
+    } catch {}
   }
 
-  // 2. OpenStreetMap Nominatim (Free, zero-cost, no billing required)
+  // 2. BigDataCloud Client Reverse Geocode API (fast client CDN endpoint, no API key needed, <200ms)
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
+    const res = await fetch(bdcUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      const locality = data.locality || data.localityInfo?.administrative?.[3]?.name;
+      const city = data.city || data.principalSubdivision;
+      const state = data.principalSubdivision;
+      const parts = [locality, city, state].filter(Boolean);
+      // Remove duplicates
+      const uniqueParts = Array.from(new Set(parts));
+
+      if (uniqueParts.length > 0) {
+        const result: ReverseGeocodeResult = {
+          address: uniqueParts.join(', '),
+          isApproximate: false,
+          provider: 'bigdatacloud',
+        };
+        reverseGeocodeCache.set(cacheKey, result);
+        return result;
+      }
+    }
+  } catch {}
+
+  // 3. OpenStreetMap Nominatim with strict 2.5s timeout
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=en`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+    clearTimeout(timeoutId);
     if (res.ok) {
       const data = await res.json();
       const isApprox = !data?.address?.road && !data?.address?.house_number && !data?.address?.building;
@@ -154,26 +194,28 @@ export async function reverseGeocode(lat: number, lng: number): Promise<ReverseG
         const state = data.address.state;
         const parts = [primary, city, state].filter(Boolean);
         if (parts.length > 0) {
-          return {
+          const result: ReverseGeocodeResult = {
             address: parts.join(', '),
             isApproximate: isApprox,
             provider: 'nominatim',
           };
+          reverseGeocodeCache.set(cacheKey, result);
+          return result;
         }
       }
       if (data?.display_name) {
-        return {
+        const result: ReverseGeocodeResult = {
           address: data.display_name as string,
           isApproximate: isApprox,
           provider: 'nominatim',
         };
+        reverseGeocodeCache.set(cacheKey, result);
+        return result;
       }
     }
-  } catch (err) {
-    console.warn('[Geocoding] Reverse geocoding failed:', err);
-  }
+  } catch {}
 
-  // 3. Fallback: Friendly readable location (do NOT expose lat/lng to customers)
+  // 4. Clean Instant Fallback
   return {
     address: 'Current Location (GPS Detected)',
     isApproximate: true,
@@ -185,36 +227,49 @@ export async function forwardGeocode(query: string): Promise<{ lat: number; lng:
   const q = query.trim();
   if (!q) return null;
 
+  const cacheKey = q.toLowerCase();
+  if (forwardGeocodeCache.has(cacheKey)) {
+    return forwardGeocodeCache.get(cacheKey)!;
+  }
+
   // 1. Google Maps Geocoding if configured
   if (hasValidGoogleKey) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}&key=${googleMapsKey}`;
-      const gRes = await fetch(gUrl);
+      const gRes = await fetch(gUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (gRes.ok) {
         const gData = await gRes.json();
         if (gData.status === 'OK' && gData.results?.[0]) {
           const first = gData.results[0];
-          return {
+          const result = {
             lat: first.geometry.location.lat,
             lng: first.geometry.location.lng,
             address: first.formatted_address as string,
           };
+          forwardGeocodeCache.set(cacheKey, result);
+          return result;
         }
       }
-    } catch {
-      // Fallback seamlessly to OpenStreetMap
-    }
+    } catch {}
   }
 
-  // 2. OpenStreetMap Nominatim
+  // 2. OpenStreetMap Nominatim with 3s timeout
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1&accept-language=en`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!res.ok) throw new Error('Geocoding request failed.');
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
     const first = data[0];
-    return { lat: parseFloat(first.lat), lng: parseFloat(first.lon), address: first.display_name as string };
+    const result = { lat: parseFloat(first.lat), lng: parseFloat(first.lon), address: first.display_name as string };
+    forwardGeocodeCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     console.warn('[Geocoding] Forward geocode error:', err);
     return null;

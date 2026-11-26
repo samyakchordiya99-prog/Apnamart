@@ -1,4 +1,5 @@
 import { db, isFirebaseConfigured } from './auth';
+import { deductStockForOrderItems } from './shops';
 import {
   collection,
   doc,
@@ -100,6 +101,13 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     } catch (err) {
       console.warn('[Orders] Could not save order to Firestore (cached locally):', err);
     }
+  }
+
+  // 3. Automatically deduct ordered item quantities from vendor inventory across Firebase & local state
+  try {
+    await deductStockForOrderItems(input.items, input.shopId);
+  } catch (err) {
+    console.warn('[Orders] Could not deduct inventory stock:', err);
   }
 
   return newOrder;

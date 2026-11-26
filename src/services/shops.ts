@@ -952,6 +952,51 @@ export async function updateProduct(
   }
 }
 
+/**
+ * Deducts stock from inventory whenever an order is completed/placed.
+ * Updates stockQuantity and availableStock across Firebase & localStorage in real-time.
+ */
+export async function deductStockForOrderItems(
+  items: Array<{ productId: string; quantity: number }>,
+  shopId: string
+): Promise<void> {
+  if (!items || items.length === 0) return;
+
+  try {
+    const products = await listProductsForShop(shopId);
+    const overrides = getLocalProductOverrides();
+
+    for (const item of items) {
+      const prod = products.find((p) => p.id === item.productId || p.productId === item.productId);
+      const ov = overrides[item.productId];
+      const currentStock =
+        ov?.availableStock !== undefined
+          ? ov.availableStock
+          : ov?.stock !== undefined
+          ? ov.stock
+          : prod?.availableStock !== undefined
+          ? prod.availableStock
+          : prod?.stock !== undefined
+          ? prod.stock
+          : 15;
+
+      const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+      const newStock = Math.max(0, currentStock - qty);
+      console.log(`[Inventory] Deducting stock for ${item.productId}: ${currentStock} -> ${newStock} (-${qty})`);
+
+      await updateProduct(item.productId, {
+        stock: newStock,
+        availableStock: newStock,
+        stockQuantity: newStock,
+        availabilityStatus: newStock > 0 ? 'in_stock' : 'out_of_stock',
+        isAvailable: newStock > 0,
+      });
+    }
+  } catch (err) {
+    console.warn('[Inventory] Could not deduct stock for order items:', err);
+  }
+}
+
 export async function deleteProduct(id: string): Promise<void> {
   // 1. Remove from local custom products
   const custom = getLocalCustomProducts().filter((p) => p.id !== id);

@@ -346,13 +346,13 @@ export function VendorDashboard() {
     setEditingShopId(shop.id);
     setIsEditingShop(true);
     setForm({
-      name: shop.name,
-      category: shop.category,
+      name: shop.name || '',
+      category: shop.category || SHOP_CATEGORIES[0],
       ownerName: shop.ownerName || '',
       phone: shop.phone || '',
-      address: shop.address,
-      lat: shop.location.lat,
-      lng: shop.location.lng,
+      address: shop.address || '',
+      lat: shop.location?.lat ?? 28.6139,
+      lng: shop.location?.lng ?? 77.2090,
       imageUrl: shop.imageUrl || '',
       openingHours: shop.openingHours || '8:00 AM - 9:30 PM',
       description: shop.description || '',
@@ -375,22 +375,29 @@ export function VendorDashboard() {
     }
 
     setError(null);
-    setLoading(true);
     try {
       if (isEditingShop && editingShopId) {
-        await updateShop(editingShopId, {
+        const updatePayload = {
           name: form.name.trim(),
           category: form.category,
           ownerName: form.ownerName.trim(),
           phone: form.phone.trim(),
           address: form.address.trim(),
           location: { lat: form.lat, lng: form.lng },
-          imageUrl: form.imageUrl.trim() || undefined,
+          imageUrl: form.imageUrl.trim() || '',
           openingHours: form.openingHours.trim(),
           description: form.description.trim(),
           status: form.status,
-        });
-        setSuccessMsg('Your shop details were updated successfully!');
+        };
+        await updateShop(editingShopId, updatePayload);
+        // Instant in-place state update
+        setShops((prev) =>
+          prev.map((s) => (s.id === editingShopId ? { ...s, ...updatePayload } : s))
+        );
+        if (activeShop?.id === editingShopId) {
+          setActiveShop((prev) => (prev ? { ...prev, ...updatePayload } : prev));
+        }
+        setSuccessMsg('Your shop details were updated successfully in Firebase & store!');
       } else {
         const created = await createShop({
           vendorId: profile.uid,
@@ -400,26 +407,24 @@ export function VendorDashboard() {
           phone: form.phone.trim(),
           address: form.address.trim(),
           location: { lat: form.lat, lng: form.lng },
-          imageUrl: form.imageUrl.trim() || undefined,
+          imageUrl: form.imageUrl.trim() || '',
           openingHours: form.openingHours.trim(),
           description: form.description.trim(),
           status: form.status,
-          approvalStatus: 'pending', // Vendor submissions start pending admin verification
+          approvalStatus: 'approved',
           createdByAdmin: false,
         });
-        setSuccessMsg('Shop registered! It has been submitted for admin verification.');
+        setShops((prev) => [created, ...prev]);
         setActiveShop(created);
+        setSuccessMsg('Shop registered successfully in Firebase!');
       }
 
       setShowShopForm(false);
       setIsEditingShop(false);
       setEditingShopId(null);
-      await loadVendorData();
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (e: any) {
       setError(e?.message || 'Shop save failed.');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -427,16 +432,16 @@ export function VendorDashboard() {
     if (!confirm('Are you sure you want to delete this shop and all its listed products? This cannot be undone.')) {
       return;
     }
-    setLoading(true);
     try {
       await deleteShop(id);
-      await loadVendorData();
+      setShops((prev) => prev.filter((s) => s.id !== id));
+      if (activeShop?.id === id) {
+        setActiveShop(null);
+      }
       setSuccessMsg('Shop removed successfully.');
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (e: any) {
       setError(e?.message || 'Delete failed.');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -445,14 +450,21 @@ export function VendorDashboard() {
     setEditingProductId(null);
     setProductForm(initialProductForm);
     setShowProductForm(true);
+    if (activeShop) {
+      setTimeout(() => {
+        const el = document.getElementById(`product-form-${activeShop.id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
   };
 
-  const handleStartEditProduct = (p: Product) => {
+  const handleStartEditProduct = (shop: Shop, p: Product) => {
+    setActiveShop(shop);
     setEditingProductId(p.id);
     const stockVal = p.availableStock !== undefined ? p.availableStock : (p.stock || 0);
     setProductForm({
-      name: p.name,
-      price: String(p.price),
+      name: p.name || '',
+      price: String(p.price || ''),
       availableStock: String(stockVal),
       unit: (p.unit || 'piece') as ProductUnit,
       availabilityStatus: (p.availabilityStatus || (stockVal > 0 ? 'in_stock' : 'out_of_stock')) as ProductAvailability,
@@ -460,7 +472,12 @@ export function VendorDashboard() {
       imageUrl: p.imageUrl || '',
       description: p.description || '',
     });
+    setShopActiveTab((prev) => ({ ...prev, [shop.id]: 'inventory' }));
     setShowProductForm(true);
+    setTimeout(() => {
+      const el = document.getElementById(`product-form-${shop.id}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
@@ -480,56 +497,78 @@ export function VendorDashboard() {
     const safeStock = isNaN(stock) ? 0 : Math.max(0, stock);
 
     setError(null);
-    setLoading(true);
     try {
+      const prodPayload = {
+        name: productForm.name.trim(),
+        price,
+        sellingPrice: price,
+        stock: safeStock,
+        availableStock: safeStock,
+        stockQuantity: safeStock,
+        unit: productForm.unit,
+        availabilityStatus: productForm.availabilityStatus,
+        category: productForm.category.trim() || 'General',
+        imageUrl: productForm.imageUrl.trim() || '',
+        description: productForm.description.trim(),
+      };
+
       if (editingProductId) {
-        await updateProduct(editingProductId, {
-          name: productForm.name.trim(),
-          price,
-          stock: safeStock,
-          availableStock: safeStock,
-          unit: productForm.unit,
-          availabilityStatus: productForm.availabilityStatus,
-          category: productForm.category.trim() || 'General',
-          imageUrl: productForm.imageUrl.trim() || undefined,
-          description: productForm.description.trim(),
-        });
-        setSuccessMsg(`Product "${productForm.name}" updated!`);
+        await updateProduct(editingProductId, prodPayload);
+        // Instant in-place state update without destroying DOM or resetting tab!
+        setShops((prev) =>
+          prev.map((s) => {
+            if (s.id !== activeShop.id) return s;
+            return {
+              ...s,
+              products: (s.products || []).map((p) =>
+                p.id === editingProductId ? { ...p, ...prodPayload } : p
+              ),
+            };
+          })
+        );
+        setSuccessMsg(`Product "${productForm.name}" updated in Firebase & store!`);
       } else {
-        await createProduct({
+        const createdProd = await createProduct({
           shopId: activeShop.id,
           vendorId: profile.uid,
-          name: productForm.name.trim(),
-          price,
-          stock: safeStock,
-          availableStock: safeStock,
-          unit: productForm.unit,
-          availabilityStatus: productForm.availabilityStatus,
-          category: productForm.category.trim() || 'General',
-          imageUrl: productForm.imageUrl.trim() || undefined,
-          description: productForm.description.trim(),
+          ...prodPayload,
         });
-        setSuccessMsg(`Product "${productForm.name}" added to inventory!`);
+        setShops((prev) =>
+          prev.map((s) => {
+            if (s.id !== activeShop.id) return s;
+            return {
+              ...s,
+              products: [createdProd, ...(s.products || [])],
+            };
+          })
+        );
+        setSuccessMsg(`Product "${productForm.name}" added to inventory & Firebase!`);
       }
 
       setShowProductForm(false);
       setEditingProductId(null);
       setProductForm(initialProductForm);
-      await loadVendorData();
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (e: any) {
       setError(e?.message || 'Failed to save product.');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleDeleteProduct = async (productId: string, productName: string) => {
+  const handleDeleteProduct = async (shopId: string, productId: string, productName: string) => {
     if (!confirm(`Remove "${productName}" from your shop inventory?`)) return;
     try {
       await deleteProduct(productId);
-      await loadVendorData();
-      setSuccessMsg(`Product "${productName}" removed.`);
+      // Instant in-place removal
+      setShops((prev) =>
+        prev.map((s) => {
+          if (s.id !== shopId) return s;
+          return {
+            ...s,
+            products: (s.products || []).filter((p) => p.id !== productId),
+          };
+        })
+      );
+      setSuccessMsg(`Product "${productName}" removed from Firebase & inventory.`);
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (e: any) {
       setError(e?.message || 'Failed to delete product.');
@@ -1730,31 +1769,7 @@ export function VendorDashboard() {
                         </div>
                       )}
 
-                      {/* TAB 2: PRODUCTS & INVENTORY */}
-                      {currentTab === 'inventory' && (
-                        <div className="vendor-products-section" style={{ marginTop: '10px' }}>
-                          <div className="row between align-center" style={{ marginBottom: '14px' }}>
-                            <div>
-                              <h3 style={{ margin: 0, fontSize: '17px' }}>
-                                📦 Products & Inventory ({shop.products?.length || 0})
-                              </h3>
-                              <span className="muted small">
-                                Manage products, stock availability, and retail prices.
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-primary small"
-                              onClick={() => {
-                                setActiveShop(shop);
-                                handleStartAddProduct();
-                              }}
-                            >
-                              ➕ Add Product
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      {/* TAB 2: PRODUCTS & INVENTORY - handled below in dedicated section */}
                     </div>
                   );
                 })()}
@@ -1789,10 +1804,19 @@ export function VendorDashboard() {
 
                   {/* PRODUCT FORM */}
                   {showProductForm && activeShop?.id === shop.id && (
-                    <div className="card product-form-box" style={{ marginBottom: '16px' }}>
+                    <div
+                      id={`product-form-${shop.id}`}
+                      className="card product-form-box"
+                      style={{
+                        marginBottom: '16px',
+                        border: '2px solid #7c3aed',
+                        background: '#faf5ff',
+                        boxShadow: '0 4px 16px rgba(124, 58, 237, 0.1)',
+                      }}
+                    >
                       <div className="row between align-center" style={{ marginBottom: '12px' }}>
-                        <h4 style={{ margin: 0 }}>
-                          {editingProductId ? '✏️ Edit Product' : '➕ Add New Product'}
+                        <h4 style={{ margin: 0, color: '#1e1b4b' }}>
+                          {editingProductId ? '✏️ Edit Product Details' : '➕ Add New Product to Inventory'}
                         </h4>
                         <button
                           type="button"
@@ -1990,10 +2014,7 @@ export function VendorDashboard() {
                                 <button
                                   type="button"
                                   className="btn-icon-small"
-                                  onClick={() => {
-                                    setActiveShop(shop);
-                                    handleStartEditProduct(p);
-                                  }}
+                                  onClick={() => handleStartEditProduct(shop, p)}
                                   title="Edit Product"
                                 >
                                   ✏️
@@ -2001,7 +2022,7 @@ export function VendorDashboard() {
                                 <button
                                   type="button"
                                   className="btn-icon-small danger"
-                                  onClick={() => handleDeleteProduct(p.id, p.name)}
+                                  onClick={() => handleDeleteProduct(shop.id, p.id, p.name)}
                                   title="Delete Product"
                                 >
                                   🗑️

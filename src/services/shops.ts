@@ -116,6 +116,24 @@ const LOCAL_SHOP_OVERRIDES_KEY = 'apnabazaar_shop_overrides';
 const LOCAL_PRODUCT_OVERRIDES_KEY = 'apnabazaar_product_overrides';
 const LOCAL_DELETED_PRODUCT_IDS_KEY = 'apnabazaar_deleted_product_ids';
 
+/**
+ * Removes undefined fields recursively so Firestore setDoc never throws
+ * "Unsupported field value: undefined"
+ */
+export function cleanFirestoreData<T extends Record<string, any>>(obj: T): T {
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+        cleaned[key] = cleanFirestoreData(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  }
+  return cleaned;
+}
+
 export function getLocalShopOverrides(): Record<string, Partial<Shop>> {
   try {
     const raw = localStorage.getItem(LOCAL_SHOP_OVERRIDES_KEY);
@@ -453,10 +471,12 @@ export async function createShop(
 
   if (db && isFirebaseConfigured) {
     try {
+      const cleanDoc = cleanFirestoreData({ ...shop, isDemo: true });
       const ref = doc(collection(db, 'shops'), id);
-      await setDoc(ref, { ...shop, isDemo: true }, { merge: true });
-    } catch (err) {
-      console.warn('[Firestore] Could not sync new shop to Firestore (saved locally):', err);
+      await setDoc(ref, cleanDoc, { merge: true });
+      console.log(`[Firestore] Successfully created shop ${id} in Firebase!`);
+    } catch (err: any) {
+      console.warn('[Firestore] Could not sync new shop to Firestore (saved locally):', err?.message || err);
     }
   }
 
@@ -493,10 +513,19 @@ export async function updateShop(
     setLocalTwoKiranaShops([...SAMPLE_SHOPS]);
   }
 
-  // 2. If Firestore is active, try to sync without throwing on permission errors
+  // 2. Write full sanitized document to Firebase Firestore
   if (db && isFirebaseConfigured) {
     try {
-      await setDoc(doc(db, 'shops', id), { ...data, updatedAt: now, isDemo: true }, { merge: true });
+      const existing = (sampleIdx !== -1 ? SAMPLE_SHOPS[sampleIdx] : (idx !== -1 ? custom[idx] : {})) as any;
+      const fullShop = cleanFirestoreData({
+        ...existing,
+        ...data,
+        id,
+        updatedAt: now,
+        isDemo: true,
+      });
+      await setDoc(doc(db, 'shops', id), fullShop, { merge: true });
+      console.log(`[Firestore] Successfully saved shop ${id} to Firebase!`);
     } catch (err: any) {
       console.warn('[Firestore] Could not sync shop update to Firestore (saved locally):', err?.message || err);
     }
@@ -518,6 +547,7 @@ export async function deleteShop(id: string): Promise<void> {
         await deleteDoc(doc(db, 'products', p.id)).catch(() => {});
       }
       await deleteDoc(doc(db, 'shops', id));
+      console.log(`[Firestore] Successfully deleted shop ${id} from Firebase!`);
     } catch (e: any) {
       console.warn('[Firestore] Could not delete shop from Firestore (removed locally):', e?.message || e);
     }
@@ -719,6 +749,7 @@ export async function createProduct(
     availabilityStatus,
     createdAt: now,
     updatedAt: now,
+    isDemoData: true,
   };
 
   const custom = getLocalCustomProducts();
@@ -727,8 +758,10 @@ export async function createProduct(
 
   if (db && isFirebaseConfigured) {
     try {
+      const cleanDoc = cleanFirestoreData(product);
       const ref = doc(collection(db, 'products'), id);
-      await setDoc(ref, { ...product, isDemoData: true }, { merge: true });
+      await setDoc(ref, cleanDoc, { merge: true });
+      console.log(`[Firestore] Successfully created product ${id} in Firebase!`);
     } catch (err: any) {
       console.warn('[Firestore] Could not sync new product to Firestore (saved locally):', err?.message || err);
     }
@@ -773,10 +806,24 @@ export async function updateProduct(
     ALL_DEMO_PRODUCTS[demoIdx] = { ...ALL_DEMO_PRODUCTS[demoIdx], ...updatePayload };
   }
 
-  // 4. Try Firestore sync without failing or crashing on permission errors
+  // 4. Construct FULL product document and save to Firebase Firestore
   if (db && isFirebaseConfigured) {
     try {
-      await setDoc(doc(db, 'products', id), { ...updatePayload, isDemoData: true }, { merge: true });
+      const existingProduct =
+        (demoIdx !== -1 ? ALL_DEMO_PRODUCTS[demoIdx] : null) ||
+        (idx !== -1 ? custom[idx] : null) ||
+        {};
+
+      const fullProduct = cleanFirestoreData({
+        ...existingProduct,
+        ...updatePayload,
+        id,
+        isDemoData: true,
+        updatedAt: now,
+      });
+
+      await setDoc(doc(db, 'products', id), fullProduct, { merge: true });
+      console.log(`[Firestore] Successfully saved product ${id} to Firebase!`);
     } catch (err: any) {
       console.warn('[Firestore] Could not sync product update to Firestore (saved locally):', err?.message || err);
     }
@@ -784,14 +831,29 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: string): Promise<void> {
+  // 1. Remove from local custom products
   const custom = getLocalCustomProducts().filter((p) => p.id !== id);
   setLocalCustomProducts(custom);
 
+  // 2. Add to deleted IDs list locally
   addLocalDeletedProductId(id);
 
+  // 3. Remove from in-memory ALL_DEMO_PRODUCTS
+  const demoIdx = ALL_DEMO_PRODUCTS.findIndex((p) => p.id === id);
+  if (demoIdx !== -1) {
+    ALL_DEMO_PRODUCTS.splice(demoIdx, 1);
+  }
+
+  // 4. Delete from Firestore collection 'products' and record in 'deleted_products'
   if (db && isFirebaseConfigured) {
     try {
       await deleteDoc(doc(db, 'products', id));
+      await setDoc(
+        doc(db, 'deleted_products', id),
+        { id, deletedAt: Date.now(), deleted: true },
+        { merge: true }
+      ).catch(() => {});
+      console.log(`[Firestore] Successfully deleted product ${id} from Firebase!`);
     } catch (err: any) {
       console.warn('[Firestore] Could not sync product deletion to Firestore (removed locally):', err?.message || err);
     }

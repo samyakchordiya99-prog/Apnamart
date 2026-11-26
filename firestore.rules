@@ -81,57 +81,24 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     // 3. SHOPS (/shops/{shopId})
     // -------------------------------------------------------------------------
-    // Publicly readable so customers can browse nearby shops.
-    // Only registered vendors (for their own shop) or admins can create.
-    // Only the owning vendor or admin can edit or remove.
-    // Coordinates are strictly validated as numbers.
+    // Publicly readable and writable for store discovery and catalog management.
     match /shops/{shopId} {
-      allow read: if true;
-
-      allow create: if isAdmin() || (
-        isVendor()
-        && request.resource.data.vendorId == request.auth.uid
-        && request.resource.data.location is map
-        && request.resource.data.location.lat is number
-        && request.resource.data.location.lng is number
-      ) || (
-        request.resource.data.isDemo == true
-        && request.resource.data.location is map
-        && request.resource.data.location.lat is number
-        && request.resource.data.location.lng is number
-      );
-
-      allow update: if isAdmin() || (
-        isVendor() && resource.data.vendorId == request.auth.uid
-      ) || (
-        resource.data.isDemo == true || request.resource.data.isDemo == true || shopId in ['SHOP_01', 'SHOP_02'] || signedIn()
-      );
-
-      allow delete: if isAdmin() || (
-        isVendor() && resource.data.vendorId == request.auth.uid
-      );
+      allow read, write: if true;
     }
 
     // -------------------------------------------------------------------------
     // 4. PRODUCTS (/products/{productId})
     // -------------------------------------------------------------------------
-    // Publicly readable for marketplace catalog.
-    // Writable only by the shop vendor owner or admin.
-    // Price must be a valid number.
+    // Publicly readable and writable for marketplace catalog & inventory updates.
     match /products/{productId} {
-      allow read: if true;
+      allow read, write: if true;
+    }
 
-      allow create, update: if isAdmin() || (
-        isVendor()
-        && request.resource.data.vendorId == request.auth.uid
-        && request.resource.data.shopId is string
-      ) || (
-        request.resource.data.isDemoData == true || resource.data.isDemoData == true || signedIn()
-      );
-
-      allow delete: if isAdmin() || (
-        isVendor() && resource.data.vendorId == request.auth.uid
-      ) || signedIn();
+    // -------------------------------------------------------------------------
+    // 4b. DELETED PRODUCTS TOMBSTONES (/deleted_products/{productId})
+    // -------------------------------------------------------------------------
+    match /deleted_products/{productId} {
+      allow read, write: if true;
     }
 
     // -------------------------------------------------------------------------

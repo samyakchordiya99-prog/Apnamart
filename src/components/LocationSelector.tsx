@@ -171,172 +171,98 @@ export function LocationSelector({
   };
 
   return (
-    <div className="card-location-modal" style={{ padding: '24px' }}>
-      <div className="location-modal-header" style={{ marginBottom: '18px' }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '20px', color: '#1e1b4b' }}>
-            📍 Set Delivery Location
-          </h2>
-          <p className="muted small" style={{ margin: '4px 0 0' }}>
-            Choose your location to find nearby Kirana shops within {radiusKm} km.
-          </p>
+    <div className="loc-compact-card">
+      {/* Header row */}
+      <div className="loc-compact-header">
+        <div className="loc-compact-title">
+          <span className="loc-pin-icon">📍</span>
+          <div>
+            <div className="loc-compact-label">Set Delivery Location</div>
+            <div className="loc-compact-sub">Find Kirana shops within {radiusKm} km</div>
+          </div>
         </div>
         {onCancel && (
-          <button
-            type="button"
-            className="btn-close-modal"
-            onClick={onCancel}
-            title="Close"
-          >
-            ✕
-          </button>
+          <button type="button" className="loc-close-btn" onClick={onCancel} title="Close">✕</button>
         )}
       </div>
 
-      {/* PRIMARY ACTION: USE MY CURRENT LOCATION */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* GPS + Search in one compact row */}
+      <div className="loc-action-row">
         <button
           type="button"
-          className="btn btn-primary full"
+          className="loc-gps-btn"
           onClick={useCurrentLocation}
           disabled={loading}
           id="btn-use-current-location"
-          style={{
-            padding: '14px 20px',
-            fontSize: '15.5px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}
+          title="Use my current GPS location"
         >
-          <span style={{ fontSize: '18px' }}>🎯</span> Use My Current Location
+          {loading ? <Spinner label="" /> : <span>🎯</span>}
+          <span className="loc-gps-label">Use My Location</span>
         </button>
-        <span className="muted small" style={{ display: 'block', textAlign: 'center', marginTop: '6px' }}>
-          Uses browser GPS to automatically locate you and discover nearby Kirana stores.
-        </span>
-      </div>
 
-      {loading && <Spinner label={statusMsg || 'Updating location…'} />}
-      {error && <div className="alert error">{error}</div>}
-      {successMsg && <div className="alert success">{successMsg}</div>}
-
-      <div className="auth-divider">or</div>
-
-      {/* MANUAL ADDRESS SEARCH */}
-      <div style={{ marginBottom: '22px' }}>
-        <label className="small" style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>
-          🔍 Enter Delivery Address Manually:
-        </label>
-        <form onSubmit={submitManualAddress} style={{ display: 'flex', gap: '8px' }}>
+        <form onSubmit={submitManualAddress} className="loc-search-form">
           <input
-            className="input"
-            placeholder="Type colony, landmark, street, or city (e.g. Connaught Place, New Delhi)…"
+            className="loc-search-input"
+            placeholder="Search colony, landmark, city…"
             value={manual}
             onChange={(e) => setManual(e.target.value)}
             disabled={loading}
           />
           <button
             type="submit"
-            className="btn btn-outline"
+            className="loc-search-btn"
             disabled={loading || !manual.trim()}
-            style={{ whiteSpace: 'nowrap', padding: '0 16px' }}
           >
-            Set Address
+            🔍
           </button>
         </form>
       </div>
 
-      {/* SELECTED ADDRESS BOX (READABLE FORMAT - ZERO LAT/LNG SHOWN) */}
+      {/* Status / feedback */}
+      {loading && statusMsg && (
+        <div className="loc-status-msg">⏳ {statusMsg}</div>
+      )}
+      {error && <div className="alert error" style={{ marginTop: '10px', padding: '10px 14px', fontSize: '13px' }}>{error}</div>}
+      {successMsg && <div className="alert success" style={{ marginTop: '10px', padding: '10px 14px', fontSize: '13px' }}>{successMsg}</div>}
+
+      {/* Selected address preview */}
       {value && (
-        <div
-          style={{
-            background: '#faf5ff',
-            border: '1.5px solid #d8b4fe',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '20px',
-          }}
-        >
-          <div className="row between align-center" style={{ marginBottom: '6px' }}>
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                color: 'var(--purple-dark)',
-                background: '#ede9fe',
-                padding: '3px 8px',
-                borderRadius: '6px',
-              }}
-            >
-              📍 Selected Delivery Address
-            </span>
-          </div>
+        <div className="loc-selected-box">
+          <div className="loc-selected-tag">📍 Delivering to</div>
+          <div className="loc-selected-addr">{value.address}</div>
 
-          <p
-            style={{
-              fontSize: '16px',
-              fontWeight: 600,
-              color: '#1e1b4b',
-              margin: '6px 0 12px',
-              lineHeight: 1.4,
-            }}
-          >
-            {value.address}
-          </p>
-
-          {/* Optional flat and landmark for doorstep delivery */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
-            <div>
-              <label className="small muted" style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                Flat / House No. <span style={{ fontWeight: 400 }}>(Optional)</span>
-              </label>
-              <input
-                className="input small"
-                placeholder="e.g. Flat 402, Metro View"
-                value={flat}
-                onChange={(e) => setFlat(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="small muted" style={{ fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                Landmark <span style={{ fontWeight: 400 }}>(Optional)</span>
-              </label>
-              <input
-                className="input small"
-                placeholder="e.g. Near Mother Dairy"
-                value={landmark}
-                onChange={(e) => setLandmark(e.target.value)}
-              />
-            </div>
+          <div className="loc-optional-row">
+            <input
+              className="loc-opt-input"
+              placeholder="Flat / House No. (optional)"
+              value={flat}
+              onChange={(e) => setFlat(e.target.value)}
+            />
+            <input
+              className="loc-opt-input"
+              placeholder="Landmark (optional)"
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+            />
           </div>
         </div>
       )}
 
-      {/* CONFIRMATION & ACTION BUTTONS */}
-      <div className="row between align-center" style={{ marginTop: '16px', gap: '12px' }}>
-        {onCancel ? (
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={onCancel}
-            disabled={isSaving}
-          >
+      {/* Confirm / Cancel row */}
+      <div className="loc-footer-row">
+        {onCancel && (
+          <button type="button" className="btn btn-outline" onClick={onCancel} disabled={isSaving}>
             Cancel
           </button>
-        ) : <div />}
-
+        )}
         <button
           type="button"
           className="btn btn-primary"
           onClick={handleConfirmLocation}
           disabled={!value || isSaving || loading}
-          style={{ minWidth: '220px', padding: '12px 24px', fontSize: '15px' }}
+          style={{ flex: 1, padding: '11px 20px' }}
         >
-          {isSaving ? 'Saving Location…' : '✅ Confirm Delivery Location'}
+          {isSaving ? 'Saving…' : '✅ Confirm Location'}
         </button>
       </div>
     </div>

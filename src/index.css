@@ -2709,3 +2709,238 @@ button {
   justify-content: space-between;
   flex-shrink: 0;
 }
+
+
+/* ===== COMPACT LOCATION SELECTOR (New Clean Design) ===== */
+.loc-compact-card {
+  background: #ffffff;
+  border: 1.5px solid #e0d9f7;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.07);
+}
+
+.loc-compact-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.loc-compact-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loc-pin-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.loc-compact-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e1b4b;
+  line-height: 1.2;
+}
+
+.loc-compact-sub {
+  font-size: 12px;
+  color: #7c3aed;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.loc-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #9ca3af;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.loc-close-btn:hover { background: #f3f4f6; color: #374151; }
+
+/* GPS + Search row */
+.loc-action-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.loc-gps-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.loc-gps-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.loc-gps-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.loc-gps-label { font-size: 13px; }
+
+.loc-search-form {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.loc-search-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #d8b4fe;
+  border-radius: 10px;
+  font-size: 13.5px;
+  background: #faf5ff;
+  color: #1e1b4b;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.loc-search-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+  background: #ffffff;
+}
+
+.loc-search-btn {
+  padding: 10px 14px;
+  background: #ede9fe;
+  border: 1.5px solid #c4b5fd;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #7c3aed;
+  transition: background 0.15s;
+}
+.loc-search-btn:hover:not(:disabled) { background: #ddd6fe; }
+.loc-search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Status */
+.loc-status-msg {
+  font-size: 12.5px;
+  color: #6d28d9;
+  font-weight: 600;
+  background: #f5f3ff;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+/* Selected address box */
+.loc-selected-box {
+  background: #faf5ff;
+  border: 1.5px solid #d8b4fe;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loc-selected-tag {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #7c3aed;
+  background: #ede9fe;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.loc-selected-addr {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1e1b4b;
+  line-height: 1.4;
+}
+
+.loc-optional-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.loc-opt-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #e0d9f7;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: #374151;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+.loc-opt-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.1);
+}
+.loc-opt-input::placeholder { color: #9ca3af; }
+
+/* Footer */
+.loc-footer-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .loc-action-row { flex-direction: column; align-items: stretch; }
+  .loc-gps-btn { justify-content: center; }
+  .loc-optional-row { grid-template-columns: 1fr; }
+}
+
+/* ===== AUTH CREDENTIALS HINT BOX ===== */
+.auth-creds-hint {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-cred-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.auth-cred-row span {
+  color: #15803d;
+  font-weight: 700;
+  min-width: 90px;
+}
+
+.auth-cred-row code {
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}

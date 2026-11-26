@@ -255,7 +255,7 @@ export function CustomerHome() {
         <>
           {/* DELIVERY LOCATION SECTION */}
       {isEditingLocation ? (
-        <div className="card location-editor-container">
+        <div>
           <LocationSelector
             value={activeLocation}
             onChange={(l) => setActiveLocation(l)}

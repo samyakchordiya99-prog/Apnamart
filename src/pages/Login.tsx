@@ -1,208 +1,86 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  signInWithGoogle,
-  setupRecaptcha,
-  sendPhoneOtp,
-  verifyPhoneOtp,
-  formatPhoneNumber,
-} from '../services/auth';
-import type { ConfirmationResult } from 'firebase/auth';
 import type { UserProfile } from '../types';
 
 type RoleTab = 'customer' | 'vendor' | 'admin';
-type CustomerAuthMethod = 'phone' | 'google';
 
 export function Login() {
   const navigate = useNavigate();
-  const { refreshProfile, loginWithProfile, loginAsDemo, user } = useAuth();
+  const { loginWithProfile, loginAsDemo, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<RoleTab>('customer');
-  const [customerMethod, setCustomerMethod] = useState<CustomerAuthMethod>('phone');
 
-  // Phone OTP state
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpSent, setOtpSent] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [countdown, setCountdown] = useState(0);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  // Customer state
+  const [custPhone, setCustPhone] = useState('');
+  const [custEmail, setCustEmail] = useState('');
+  const [custName, setCustName]   = useState('');
 
   // Vendor state
-  const [shopName, setShopName] = useState('');
+  const [shopName, setShopName]           = useState('');
   const [vendorPassword, setVendorPassword] = useState('');
-  const [showVendorPw, setShowVendorPw] = useState(false);
+  const [showVendorPw, setShowVendorPw]   = useState(false);
 
   // Admin state
-  const [adminEmail, setAdminEmail] = useState('samyakchordiya99@gmail.com');
+  const [adminEmail, setAdminEmail]       = useState('samyakchordiya99@gmail.com');
   const [adminPassword, setAdminPassword] = useState('Samyak@123');
-  const [showAdminPw, setShowAdminPw] = useState(false);
+  const [showAdminPw, setShowAdminPw]     = useState(false);
 
-  // Status & loaders
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  // Status
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState<string | null>(null);
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      navigate('/home');
-    }
+    if (user) navigate('/home');
   }, [user, navigate]);
 
-  // Countdown for OTP
-  useEffect(() => {
-    if (countdown > 0) {
-      const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [countdown]);
-
-  // Cleanup recaptcha on unmount
-  useEffect(() => {
-    return () => {
-      try {
-        if ((window as any).recaptchaVerifier) {
-          (window as any).recaptchaVerifier.clear();
-          (window as any).recaptchaVerifier = null;
-        }
-      } catch {}
-    };
-  }, []);
-
-  const clearError = () => {
-    setError(null);
-    setStatusMsg(null);
-  };
-
-  const switchTab = (tab: RoleTab) => {
-    setActiveTab(tab);
-    clearError();
-  };
+  const clearError = () => setError(null);
+  const switchTab  = (tab: RoleTab) => { setActiveTab(tab); clearError(); };
 
   // ======================================================
-  //  CUSTOMER: PHONE NUMBER OTP
+  //  CUSTOMER: simple phone + email login
   // ======================================================
-  async function handleSendOtp(e: React.FormEvent) {
+  function handleCustomerLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
-    const cleaned = formatPhoneNumber(phone);
-    if (!cleaned || cleaned.length < 10) {
+
+    const phone = custPhone.replace(/\D/g, '');
+    const email = custEmail.trim().toLowerCase();
+    const name  = custName.trim();
+
+    if (phone.length < 10) {
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
-    setLoading(true);
-    setStatusMsg('Preparing reCAPTCHA verification…');
-    try {
-      const appVerifier = setupRecaptcha('recaptcha-container', 'invisible');
-      setStatusMsg(`Sending OTP to ${cleaned}…`);
-      const cr = await sendPhoneOtp(cleaned, appVerifier);
-      setConfirmationResult(cr);
-      setOtpSent(true);
-      setCountdown(60);
-      setStatusMsg(null);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to send OTP. Please check the mobile number.');
-    } finally {
-      setLoading(false);
-      setStatusMsg(null);
-    }
-  }
-
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault();
-    clearError();
-    const otpStr = otp.join('');
-    if (otpStr.length < 6) {
-      setError('Please enter the complete 6-digit OTP code.');
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address.');
       return;
     }
-    if (!confirmationResult) {
-      setError('Session expired. Please request a new OTP code.');
-      setOtpSent(false);
-      return;
-    }
-    setLoading(true);
-    setStatusMsg('Verifying OTP code…');
-    try {
-      const res = await verifyPhoneOtp(confirmationResult, otpStr);
-      await refreshProfile();
-      if (res.profile?.role === 'admin') navigate('/admin');
-      else if (res.profile?.role === 'vendor') navigate('/vendor');
-      else navigate('/home');
-    } catch (err: any) {
-      setError(err?.message || 'OTP verification failed. Please try again.');
-    } finally {
-      setLoading(false);
-      setStatusMsg(null);
-    }
-  }
 
-  async function handleResendOtp() {
-    if (countdown > 0) return;
-    clearError();
     setLoading(true);
     try {
-      const appVerifier = setupRecaptcha('recaptcha-container', 'invisible');
-      const cr = await sendPhoneOtp(formatPhoneNumber(phone), appVerifier);
-      setConfirmationResult(cr);
-      setCountdown(60);
+      const uid = `cust-${phone}`;
+      const displayName = name || email.split('@')[0];
+      const profile: UserProfile = {
+        uid,
+        email,
+        phone: `+91${phone}`,
+        displayName,
+        role: 'customer',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      loginWithProfile(profile);
+      navigate('/home');
     } catch (err: any) {
-      setError(err?.message || 'Could not resend OTP.');
+      setError(err?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  function handleOtpDigit(index: number, val: string) {
-    if (!/^\d*$/.test(val)) return;
-    const nextOtp = [...otp];
-    nextOtp[index] = val.slice(-1);
-    setOtp(nextOtp);
-    if (val && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  }
-
-  function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  }
-
-  // ======================================================
-  //  CUSTOMER: GOOGLE / GMAIL LOGIN
-  // ======================================================
-  async function handleGoogleLogin() {
-    clearError();
-    setLoading(true);
-    setStatusMsg('Connecting with Google / Gmail…');
-    try {
-      const res = await signInWithGoogle();
-      await refreshProfile();
-      if (res.profile?.role === 'admin') navigate('/admin');
-      else if (res.profile?.role === 'vendor') navigate('/vendor');
-      else navigate('/home');
-    } catch (err: any) {
-      console.warn('Google sign-in error:', err);
-      if (err?.message?.includes('unauthorized-domain')) {
-        setError(
-          'Firebase Domain Not Authorized: In Firebase Console -> Authentication -> Settings -> Authorized Domains, add "apnamart-teal.vercel.app". Or use Phone Login / Quick Guest below!'
-        );
-      } else if (err?.message?.includes('popup-closed-by-user')) {
-        setError('Google sign-in was closed before completion. Please try again.');
-      } else {
-        setError(err?.message || 'Google sign-in failed.');
-      }
-    } finally {
-      setLoading(false);
-      setStatusMsg(null);
-    }
-  }
-
-  // Quick Demo Customer
+  // Quick Guest
   function handleDemoCustomer() {
     loginAsDemo('customer');
     navigate('/home');
@@ -211,15 +89,12 @@ export function Login() {
   // ======================================================
   //  VENDOR LOGIN
   // ======================================================
-  async function handleVendorLogin(e: React.FormEvent) {
+  function handleVendorLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
-    if (!shopName.trim()) {
-      setError('Please enter or select your shop name.');
-      return;
-    }
+    if (!shopName.trim()) { setError('Please select a shop.'); return; }
     if (vendorPassword !== 'Apnamart@123') {
-      setError('Invalid vendor password. (Hint: Apnamart@123)');
+      setError('Invalid vendor password. Hint: Apnamart@123');
       return;
     }
     setLoading(true);
@@ -229,8 +104,8 @@ export function Login() {
         shopName.includes('02') ||
         shopName.toLowerCase().includes('sharma');
       const targetShopId = isShop2 ? 'SHOP_02' : 'SHOP_01';
-      const vendorUid = isShop2 ? 'demo-kirana-vendor-2' : 'demo-kirana-vendor-1';
-      const cleanName = isShop2
+      const vendorUid    = isShop2 ? 'demo-kirana-vendor-2' : 'demo-kirana-vendor-1';
+      const cleanName    = isShop2
         ? 'Shri Krishna Kirana & Provision Store'
         : 'Apna Kirana & General Store';
 
@@ -258,7 +133,7 @@ export function Login() {
   // ======================================================
   //  ADMIN LOGIN
   // ======================================================
-  async function handleAdminLogin(e: React.FormEvent) {
+  function handleAdminLogin(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     const emailTrimmed = adminEmail.trim().toLowerCase();
@@ -268,7 +143,10 @@ export function Login() {
     }
     setLoading(true);
     try {
-      if (emailTrimmed === 'samyakchordiya99@gmail.com' && adminPassword === 'Samyak@123') {
+      if (
+        emailTrimmed === 'samyakchordiya99@gmail.com' &&
+        adminPassword === 'Samyak@123'
+      ) {
         const adminProfile: UserProfile = {
           uid: 'admin-samyak',
           email: 'samyakchordiya99@gmail.com',
@@ -314,7 +192,7 @@ export function Login() {
           <div className="auth-feature-pill">
             <span className="pill-icon">🏪</span>
             <div>
-              <strong>Ravi Kirana & Sharma General</strong>
+              <strong>Apna Kirana &amp; Shri Krishna</strong>
               <small>Real inventory with verified prices</small>
             </div>
           </div>
@@ -328,7 +206,7 @@ export function Login() {
         </div>
 
         <div className="auth-brand-footer">
-          <span>🔒 Safe, verified & SSL-encrypted platform</span>
+          <span>🔒 Safe, verified &amp; SSL-encrypted platform</span>
         </div>
       </div>
 
@@ -365,174 +243,78 @@ export function Login() {
             </button>
           </div>
 
-          {/* Alerts */}
+          {/* Error */}
           {error && (
             <div className="auth-alert error">
               <span>⚠️</span> <div>{error}</div>
-            </div>
-          )}
-          {statusMsg && (
-            <div className="auth-alert info">
-              <span>ℹ️</span> <div>{statusMsg}</div>
             </div>
           )}
 
           {/* ===================== CUSTOMER TAB ===================== */}
           {activeTab === 'customer' && (
             <div className="auth-tab-content">
-              {/* Method Sub-Tabs: Phone OTP or Google */}
-              <div className="auth-method-switcher">
-                <button
-                  type="button"
-                  className={`auth-method-btn ${customerMethod === 'phone' ? 'active' : ''}`}
-                  onClick={() => {
-                    setCustomerMethod('phone');
-                    clearError();
-                  }}
-                >
-                  📱 Mobile (OTP)
-                </button>
-                <button
-                  type="button"
-                  className={`auth-method-btn ${customerMethod === 'google' ? 'active' : ''}`}
-                  onClick={() => {
-                    setCustomerMethod('google');
-                    clearError();
-                  }}
-                >
-                  🌐 Google (Gmail)
-                </button>
-              </div>
-
-              {/* METHOD 1: PHONE NUMBER WITH OTP */}
-              {customerMethod === 'phone' && (
-                <div>
-                  {!otpSent ? (
-                    <form onSubmit={handleSendOtp}>
-                      <div className="auth-field-group">
-                        <label className="auth-field-label">Mobile Number</label>
-                        <div className="auth-phone-row">
-                          <div className="auth-country-code">🇮🇳 +91</div>
-                          <input
-                            className="auth-input auth-phone-input"
-                            type="tel"
-                            placeholder="Enter 10-digit number"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                            maxLength={10}
-                            required
-                            autoFocus
-                          />
-                        </div>
-                        <span className="auth-hint">We'll send an official SMS code to verify.</span>
-                      </div>
-                      <button
-                        className="auth-btn auth-btn-customer"
-                        type="submit"
-                        disabled={loading || phone.trim().length < 10}
-                      >
-                        {loading ? 'Sending OTP…' : '📲 Send Verification OTP'}
-                      </button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleVerifyOtp}>
-                      <div className="auth-otp-sent-info">
-                        <span>
-                          Code sent to: <strong>+91 {phone}</strong>
-                        </span>
-                        <button
-                          type="button"
-                          className="auth-link-text font-bold"
-                          onClick={() => {
-                            setOtpSent(false);
-                            setOtp(['', '', '', '', '', '']);
-                            clearError();
-                          }}
-                        >
-                          Change Number
-                        </button>
-                      </div>
-
-                      <div className="auth-field-group">
-                        <label className="auth-field-label">Enter 6-Digit OTP</label>
-                        <div className="auth-otp-boxes">
-                          {otp.map((digit, i) => (
-                            <input
-                              key={i}
-                              ref={(el) => {
-                                otpRefs.current[i] = el;
-                              }}
-                              className="auth-otp-box"
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={digit}
-                              onChange={(e) => handleOtpDigit(i, e.target.value)}
-                              onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                              autoFocus={i === 0}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <button
-                        className="auth-btn auth-btn-customer"
-                        type="submit"
-                        disabled={loading || otp.join('').length < 6}
-                      >
-                        {loading ? 'Verifying OTP…' : '✅ Verify & Continue'}
-                      </button>
-
-                      <div className="auth-resend-row">
-                        <button
-                          type="button"
-                          className="auth-link-text"
-                          onClick={handleResendOtp}
-                          disabled={countdown > 0 || loading}
-                        >
-                          {countdown > 0 ? `Resend OTP in ${countdown}s` : '🔄 Resend OTP Code'}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                  <div id="recaptcha-container" ref={recaptchaContainerRef} />
+              <form onSubmit={handleCustomerLogin}>
+                {/* Phone */}
+                <div className="auth-field-group">
+                  <label className="auth-field-label">Mobile Number</label>
+                  <div className="auth-phone-row">
+                    <div className="auth-country-code">🇮🇳 +91</div>
+                    <input
+                      className="auth-input auth-phone-input"
+                      type="tel"
+                      placeholder="Enter 10-digit number"
+                      value={custPhone}
+                      onChange={(e) => setCustPhone(e.target.value.replace(/\D/g, ''))}
+                      maxLength={10}
+                      required
+                      autoFocus
+                    />
+                  </div>
                 </div>
-              )}
 
-              {/* METHOD 2: GOOGLE / GMAIL */}
-              {customerMethod === 'google' && (
-                <div className="auth-gmail-box">
-                  <button
-                    type="button"
-                    className="auth-google-btn"
-                    onClick={handleGoogleLogin}
-                    disabled={loading}
-                  >
-                    <svg className="google-icon" viewBox="0 0 24 24" width="22" height="22">
-                      <path
-                        fill="#4285F4"
-                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                      />
-                    </svg>
-                    <span>{loading ? 'Connecting Google…' : 'Sign in with Google (Gmail)'}</span>
-                  </button>
-                  <p className="auth-hint-center">Instant 1-click login with your Google account</p>
+                {/* Email */}
+                <div className="auth-field-group">
+                  <label className="auth-field-label">Email Address</label>
+                  <div className="auth-input-wrapper">
+                    <span className="auth-input-icon">📧</span>
+                    <input
+                      className="auth-input auth-input-icon-pad"
+                      type="email"
+                      placeholder="yourname@gmail.com"
+                      value={custEmail}
+                      onChange={(e) => setCustEmail(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              )}
 
-              {/* Instant 1-Click Guest Test */}
+                {/* Name (optional) */}
+                <div className="auth-field-group">
+                  <label className="auth-field-label">
+                    Your Name <span style={{ fontWeight: 400, color: '#9ca3af' }}>(Optional)</span>
+                  </label>
+                  <div className="auth-input-wrapper">
+                    <span className="auth-input-icon">👤</span>
+                    <input
+                      className="auth-input auth-input-icon-pad"
+                      type="text"
+                      placeholder="e.g. Rohit Sharma"
+                      value={custName}
+                      onChange={(e) => setCustName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  className="auth-btn auth-btn-customer"
+                  type="submit"
+                  disabled={loading || custPhone.length < 10 || !custEmail.includes('@')}
+                >
+                  {loading ? 'Logging in…' : '⚡ Continue to ApnaMart'}
+                </button>
+              </form>
+
+              {/* Quick Guest */}
               <div className="auth-divider-line">
                 <span>or instant access</span>
               </div>
@@ -545,44 +327,36 @@ export function Login() {
           {/* ===================== VENDOR TAB ===================== */}
           {activeTab === 'vendor' && (
             <form onSubmit={handleVendorLogin} className="auth-tab-content">
+              {/* Credentials hint */}
+              <div className="auth-creds-hint">
+                <div className="auth-cred-row">
+                  <span>🏪 Shop 1</span><code>Apna Kirana (SHOP_01)</code>
+                </div>
+                <div className="auth-cred-row">
+                  <span>🏪 Shop 2</span><code>Shri Krishna (SHOP_02)</code>
+                </div>
+                <div className="auth-cred-row">
+                  <span>🔒 Password</span><code>Apnamart@123</code>
+                </div>
+              </div>
+
               <div className="auth-field-group">
-                <label className="auth-field-label">Quick Shop Selection</label>
+                <label className="auth-field-label">Select Your Shop</label>
                 <div className="auth-chips-row">
                   <button
                     type="button"
                     className={`auth-chip ${shopName === 'Apna Kirana & General Store' ? 'active' : ''}`}
-                    onClick={() => {
-                      setShopName('Apna Kirana & General Store');
-                      setVendorPassword('Apnamart@123');
-                    }}
+                    onClick={() => { setShopName('Apna Kirana & General Store'); setVendorPassword('Apnamart@123'); }}
                   >
                     🏪 Apna Kirana (SHOP_01)
                   </button>
                   <button
                     type="button"
                     className={`auth-chip ${shopName === 'Shri Krishna Kirana & Provision Store' ? 'active' : ''}`}
-                    onClick={() => {
-                      setShopName('Shri Krishna Kirana & Provision Store');
-                      setVendorPassword('Apnamart@123');
-                    }}
+                    onClick={() => { setShopName('Shri Krishna Kirana & Provision Store'); setVendorPassword('Apnamart@123'); }}
                   >
                     🏪 Shri Krishna (SHOP_02)
                   </button>
-                </div>
-              </div>
-
-              <div className="auth-field-group">
-                <label className="auth-field-label">Shop Name</label>
-                <div className="auth-input-wrapper">
-                  <span className="auth-input-icon">🏪</span>
-                  <input
-                    className="auth-input auth-input-icon-pad"
-                    type="text"
-                    placeholder="e.g. Apna Kirana & General Store"
-                    value={shopName}
-                    onChange={(e) => setShopName(e.target.value)}
-                    required
-                  />
                 </div>
               </div>
 
@@ -606,9 +380,6 @@ export function Login() {
                     {showVendorPw ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <span className="auth-hint">
-                  Password: <code>Apnamart@123</code>
-                </span>
               </div>
 
               <button
@@ -624,6 +395,16 @@ export function Login() {
           {/* ===================== ADMIN TAB ===================== */}
           {activeTab === 'admin' && (
             <form onSubmit={handleAdminLogin} className="auth-tab-content">
+              {/* Credentials hint */}
+              <div className="auth-creds-hint">
+                <div className="auth-cred-row">
+                  <span>📧 Email</span><code>samyakchordiya99@gmail.com</code>
+                </div>
+                <div className="auth-cred-row">
+                  <span>🔐 Password</span><code>Samyak@123</code>
+                </div>
+              </div>
+
               <div className="auth-field-group">
                 <label className="auth-field-label">Admin Email</label>
                 <div className="auth-input-wrapper">
@@ -657,7 +438,6 @@ export function Login() {
                     {showAdminPw ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <span className="auth-hint">Pre-filled credentials for Samyak (Admin)</span>
               </div>
 
               <button

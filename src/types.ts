@@ -31,6 +31,8 @@ export interface UserProfile {
   displayName: string;
   role: Role;
   phone?: string;
+  shopId?: string;
+  vendorShopId?: string;
   location?: LocationData | null;
   createdAt: number;
   updatedAt: number;

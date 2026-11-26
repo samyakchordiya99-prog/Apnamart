@@ -5,7 +5,6 @@ import {
   getDoc,
   getDocs,
   setDoc,
-  updateDoc,
   deleteDoc,
   query,
   where,
@@ -113,6 +112,106 @@ export const SAMPLE_SHOPS: Shop[] = createTwoKiranaShopsForLocation({
 const LOCAL_SHOPS_KEY = 'apnabazaar_custom_shops';
 const LOCAL_PRODUCTS_KEY = 'apnabazaar_custom_products';
 const LOCAL_TWO_KIRANA_KEY = 'apnabazaar_demo_two_kirana_shops';
+const LOCAL_SHOP_OVERRIDES_KEY = 'apnabazaar_shop_overrides';
+const LOCAL_PRODUCT_OVERRIDES_KEY = 'apnabazaar_product_overrides';
+const LOCAL_DELETED_PRODUCT_IDS_KEY = 'apnabazaar_deleted_product_ids';
+
+export function getLocalShopOverrides(): Record<string, Partial<Shop>> {
+  try {
+    const raw = localStorage.getItem(LOCAL_SHOP_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setLocalShopOverride(shopId: string, override: Partial<Shop>) {
+  try {
+    const all = getLocalShopOverrides();
+    all[shopId] = { ...(all[shopId] || {}), ...override };
+    localStorage.setItem(LOCAL_SHOP_OVERRIDES_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+export function getLocalProductOverrides(): Record<string, Partial<Product>> {
+  try {
+    const raw = localStorage.getItem(LOCAL_PRODUCT_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setLocalProductOverride(productId: string, override: Partial<Product>) {
+  try {
+    const all = getLocalProductOverrides();
+    all[productId] = { ...(all[productId] || {}), ...override };
+    localStorage.setItem(LOCAL_PRODUCT_OVERRIDES_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+export function getLocalDeletedProductIds(): string[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_DELETED_PRODUCT_IDS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addLocalDeletedProductId(productId: string) {
+  try {
+    const list = getLocalDeletedProductIds();
+    if (!list.includes(productId)) {
+      list.push(productId);
+      localStorage.setItem(LOCAL_DELETED_PRODUCT_IDS_KEY, JSON.stringify(list));
+    }
+  } catch {}
+}
+
+export function applyShopOverrides(shops: Shop[]): Shop[] {
+  const overrides = getLocalShopOverrides();
+  return shops.map((s) => {
+    const ov = overrides[s.id];
+    const updated = ov ? { ...s, ...ov } : { ...s };
+    if (s.id === 'SHOP_01' || s.id === 'SHOP_02') {
+      updated.approvalStatus = 'approved';
+    }
+    return updated;
+  });
+}
+
+export function applyProductOverrides(products: Product[]): Product[] {
+  const overrides = getLocalProductOverrides();
+  const deleted = getLocalDeletedProductIds();
+  const filtered = deleted.length > 0 ? products.filter((p) => !deleted.includes(p.id)) : products;
+
+  return filtered.map((p) => {
+    const ov = overrides[p.id];
+    if (!ov) return p;
+    const stockVal =
+      ov.availableStock !== undefined
+        ? ov.availableStock
+        : ov.stock !== undefined
+        ? ov.stock
+        : p.availableStock;
+    const priceVal =
+      ov.price !== undefined
+        ? ov.price
+        : ov.sellingPrice !== undefined
+        ? ov.sellingPrice
+        : p.price;
+    return {
+      ...p,
+      ...ov,
+      price: priceVal,
+      sellingPrice: priceVal,
+      stock: stockVal,
+      availableStock: stockVal,
+      stockQuantity: stockVal,
+    };
+  });
+}
 
 function getLocalTwoKiranaShops(): Shop[] {
   try {
@@ -245,6 +344,9 @@ export async function listAllShops(): Promise<Shop[]> {
     }
   }
 
+  // Apply any persistent shop overrides & ensure demo shops are approved
+  result = applyShopOverrides(result);
+
   // Load products for each shop
   for (const shop of result) {
     try {
@@ -257,51 +359,77 @@ export async function listAllShops(): Promise<Shop[]> {
   return result;
 }
 
-export async function listShopsForVendor(vendorId: string): Promise<Shop[]> {
+export async function listShopsForVendor(vendorId: string, targetShopId?: string): Promise<Shop[]> {
+  const storedTarget = targetShopId || (typeof window !== 'undefined' ? localStorage.getItem('apnabazaar_active_vendor_shop_id') : null) || undefined;
+
+  let allShops: Shop[] = [];
   if (!db || !isFirebaseConfigured) {
     const custom = getLocalCustomShops();
-    let all = [...SAMPLE_SHOPS, ...custom].filter((s) => s.vendorId === vendorId);
-    if (all.length === 0) {
-      all = [...SAMPLE_SHOPS];
-    }
-    for (const s of all) {
-      s.products = await listProductsForShop(s.id);
-    }
-    return all;
-  }
+    allShops = [...SAMPLE_SHOPS, ...custom];
+  } else {
+    try {
+      const q = query(collection(db, 'shops'), where('vendorId', '==', vendorId));
+      const snap = await getDocs(q);
+      let shops = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Shop, 'id'>),
+      }));
 
-  try {
-    const q = query(collection(db, 'shops'), where('vendorId', '==', vendorId));
-    const snap = await getDocs(q);
-    let shops = snap.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as Omit<Shop, 'id'>),
-    }));
-
-    // If vendor owns no custom shops yet (e.g. demo mode or admin), provide demo shops SHOP_01 and SHOP_02
-    if (shops.length === 0) {
-      const allShopsSnap = await getDocs(collection(db, 'shops'));
-      shops = allShopsSnap.docs
-        .map((d) => ({ id: d.id, ...(d.data() as Omit<Shop, 'id'>) }))
-        .filter((s) => s.id === 'SHOP_01' || s.id === 'SHOP_02');
-
+      // If vendor owns no custom shops yet (e.g. demo mode or admin), provide demo shops
       if (shops.length === 0) {
-        shops = [...SAMPLE_SHOPS];
-      }
-    }
+        const allShopsSnap = await getDocs(collection(db, 'shops'));
+        shops = allShopsSnap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as Omit<Shop, 'id'>) }))
+          .filter((s) => s.id === 'SHOP_01' || s.id === 'SHOP_02');
 
-    for (const shop of shops) {
-      shop.products = await listProductsForShop(shop.id);
+        if (shops.length === 0) {
+          shops = [...SAMPLE_SHOPS];
+        }
+      }
+      allShops = shops;
+    } catch (err) {
+      console.warn('Failed to query vendor shops from Firestore, falling back to demo shops:', err);
+      allShops = [...SAMPLE_SHOPS];
     }
-    return shops;
-  } catch (err) {
-    console.warn('Failed to query vendor shops from Firestore, falling back to demo shops:', err);
-    const fallback = [...SAMPLE_SHOPS];
-    for (const s of fallback) {
-      s.products = await listProductsForShop(s.id);
-    }
-    return fallback;
   }
+
+  // Apply persistent shop overrides
+  allShops = applyShopOverrides(allShops);
+
+  // Strict isolation: whichever shop was called / selected, only that shop is accessible!
+  const isShop1 =
+    storedTarget === 'SHOP_01' ||
+    vendorId === 'demo-kirana-vendor-1' ||
+    vendorId === 'SHOP_01' ||
+    vendorId.toLowerCase().includes('shop_01') ||
+    vendorId.toLowerCase().includes('apna-kirana') ||
+    vendorId.toLowerCase().includes('apnakirana');
+
+  const isShop2 =
+    storedTarget === 'SHOP_02' ||
+    vendorId === 'demo-kirana-vendor-2' ||
+    vendorId === 'SHOP_02' ||
+    vendorId.toLowerCase().includes('shop_02') ||
+    vendorId.toLowerCase().includes('krishna');
+
+  let filtered = allShops;
+  if (isShop1 && !isShop2) {
+    filtered = allShops.filter((s) => s.id === 'SHOP_01' || s.id === DEMO_KIRANA_SHOP_1_ID);
+  } else if (isShop2 && !isShop1) {
+    filtered = allShops.filter((s) => s.id === 'SHOP_02' || s.id === DEMO_KIRANA_SHOP_2_ID);
+  } else if (storedTarget) {
+    filtered = allShops.filter((s) => s.id === storedTarget);
+  }
+
+  if (filtered.length === 0) {
+    filtered = allShops.length > 0 ? [allShops[0]] : [...SAMPLE_SHOPS];
+  }
+
+  for (const shop of filtered) {
+    shop.products = await listProductsForShop(shop.id);
+  }
+
+  return filtered;
 }
 
 export async function createShop(
@@ -319,15 +447,19 @@ export async function createShop(
     updatedAt: now,
   };
 
-  if (!db || !isFirebaseConfigured) {
-    const custom = getLocalCustomShops();
-    custom.unshift(shop);
-    setLocalCustomShops(custom);
-    return shop;
+  const custom = getLocalCustomShops();
+  custom.unshift(shop);
+  setLocalCustomShops(custom);
+
+  if (db && isFirebaseConfigured) {
+    try {
+      const ref = doc(collection(db, 'shops'), id);
+      await setDoc(ref, { ...shop, isDemo: true }, { merge: true });
+    } catch (err) {
+      console.warn('[Firestore] Could not sync new shop to Firestore (saved locally):', err);
+    }
   }
 
-  const ref = doc(collection(db, 'shops'), id);
-  await setDoc(ref, shop);
   return shop;
 }
 
@@ -337,46 +469,59 @@ export async function updateShop(
 ): Promise<void> {
   const now = Date.now();
 
-  if (!db || !isFirebaseConfigured) {
-    const custom = getLocalCustomShops();
-    const idx = custom.findIndex((s) => s.id === id);
-    if (idx !== -1) {
-      custom[idx] = { ...custom[idx], ...data, updatedAt: now };
-      setLocalCustomShops(custom);
-      return;
-    }
-    const sampleIdx = SAMPLE_SHOPS.findIndex((s) => s.id === id);
-    if (sampleIdx !== -1) {
-      SAMPLE_SHOPS[sampleIdx] = { ...SAMPLE_SHOPS[sampleIdx], ...data, updatedAt: now };
-      return;
-    }
-    return;
+  // 1. Always update local storage & persistent override
+  setLocalShopOverride(id, data);
+
+  const custom = getLocalCustomShops();
+  const idx = custom.findIndex((s) => s.id === id);
+  if (idx !== -1) {
+    custom[idx] = { ...custom[idx], ...data, updatedAt: now };
+    setLocalCustomShops(custom);
   }
 
-  await updateDoc(doc(db, 'shops', id), { ...data, updatedAt: now });
+  const sampleIdx = SAMPLE_SHOPS.findIndex((s) => s.id === id);
+  if (sampleIdx !== -1) {
+    SAMPLE_SHOPS[sampleIdx] = { ...SAMPLE_SHOPS[sampleIdx], ...data, updatedAt: now };
+  }
+
+  const cachedTwo = getLocalTwoKiranaShops();
+  const twoIdx = cachedTwo.findIndex((s) => s.id === id);
+  if (twoIdx !== -1) {
+    cachedTwo[twoIdx] = { ...cachedTwo[twoIdx], ...data, updatedAt: now };
+    setLocalTwoKiranaShops(cachedTwo);
+  } else if (sampleIdx !== -1) {
+    setLocalTwoKiranaShops([...SAMPLE_SHOPS]);
+  }
+
+  // 2. If Firestore is active, try to sync without throwing on permission errors
+  if (db && isFirebaseConfigured) {
+    try {
+      await setDoc(doc(db, 'shops', id), { ...data, updatedAt: now, isDemo: true }, { merge: true });
+    } catch (err: any) {
+      console.warn('[Firestore] Could not sync shop update to Firestore (saved locally):', err?.message || err);
+    }
+  }
 }
 
 export async function deleteShop(id: string): Promise<void> {
-  if (!db || !isFirebaseConfigured) {
-    const custom = getLocalCustomShops().filter((s) => s.id !== id);
-    setLocalCustomShops(custom);
+  const custom = getLocalCustomShops().filter((s) => s.id !== id);
+  setLocalCustomShops(custom);
 
-    const prods = getLocalCustomProducts().filter((p) => p.shopId !== id);
-    setLocalCustomProducts(prods);
-    return;
-  }
+  const prods = getLocalCustomProducts().filter((p) => p.shopId !== id);
+  setLocalCustomProducts(prods);
 
-  // Delete products under this shop first
-  try {
-    const prods = await listProductsForShop(id);
-    for (const p of prods) {
-      await deleteDoc(doc(db, 'products', p.id));
+  if (db && isFirebaseConfigured) {
+    try {
+      // Delete products under this shop first
+      const shopProds = await listProductsForShop(id);
+      for (const p of shopProds) {
+        await deleteDoc(doc(db, 'products', p.id)).catch(() => {});
+      }
+      await deleteDoc(doc(db, 'shops', id));
+    } catch (e: any) {
+      console.warn('[Firestore] Could not delete shop from Firestore (removed locally):', e?.message || e);
     }
-  } catch (e) {
-    console.error('Error removing shop products:', e);
   }
-
-  await deleteDoc(doc(db, 'shops', id));
 }
 
 // ----------------- PRODUCTS API -----------------
@@ -384,8 +529,13 @@ export async function deleteShop(id: string): Promise<void> {
 export async function listProductsForShop(shopId: string): Promise<Product[]> {
   // Normalize shop ID for backward compatibility
   const normalizedShopId =
-    shopId === 'apnabazaar-kirana-1' ? 'SHOP_01' :
-    shopId === 'apnabazaar-kirana-2' ? 'SHOP_02' : shopId;
+    shopId === 'apnabazaar-kirana-1' || shopId === DEMO_KIRANA_SHOP_1_ID
+      ? 'SHOP_01'
+      : shopId === 'apnabazaar-kirana-2' || shopId === DEMO_KIRANA_SHOP_2_ID
+      ? 'SHOP_02'
+      : shopId;
+
+  let baseProducts: Product[] = [];
 
   if (db && isFirebaseConfigured) {
     try {
@@ -395,7 +545,7 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
       );
       const snap = await getDocs(q);
       if (!snap.empty) {
-        return snap.docs.map((d) => {
+        baseProducts = snap.docs.map((d) => {
           const data = d.data() as any;
           const mrp = typeof data.mrp === 'number' ? data.mrp : data.price || 0;
           const discountPercent = typeof data.discountPercent === 'number' ? data.discountPercent : 0;
@@ -452,22 +602,31 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
     }
   }
 
-  // Fallback to local demo dataset (100 products for SHOP_01 and 100 for SHOP_02)
-  const fallback = getDemoProductsForShop(normalizedShopId);
-  if (fallback.length > 0) {
-    return fallback;
+  // Fallback to local demo dataset if no products from Firestore
+  if (baseProducts.length === 0) {
+    baseProducts = getDemoProductsForShop(normalizedShopId);
   }
 
+  // Include custom products created by the user for this shop
   const customProds = getLocalCustomProducts().filter((p) => p.shopId === normalizedShopId);
-  return customProds;
+  for (const cp of customProds) {
+    if (!baseProducts.some((bp) => bp.id === cp.id)) {
+      baseProducts.unshift(cp);
+    }
+  }
+
+  // Apply persistent product overrides and remove deleted items
+  return applyProductOverrides(baseProducts);
 }
 
 export async function listAllProducts(): Promise<Product[]> {
+  let all: Product[] = [];
+
   if (db && isFirebaseConfigured) {
     try {
       const snap = await getDocs(collection(db, 'products'));
       if (!snap.empty) {
-        return snap.docs.map((d) => {
+        all = snap.docs.map((d) => {
           const data = d.data() as any;
           const mrp = typeof data.mrp === 'number' ? data.mrp : data.price || 0;
           const discountPercent = typeof data.discountPercent === 'number' ? data.discountPercent : 0;
@@ -528,7 +687,18 @@ export async function listAllProducts(): Promise<Product[]> {
     }
   }
 
-  return ALL_DEMO_PRODUCTS;
+  if (all.length === 0) {
+    all = [...ALL_DEMO_PRODUCTS];
+  }
+
+  const customProds = getLocalCustomProducts();
+  for (const cp of customProds) {
+    if (!all.some((p) => p.id === cp.id)) {
+      all.unshift(cp);
+    }
+  }
+
+  return applyProductOverrides(all);
 }
 
 export async function createProduct(
@@ -551,15 +721,19 @@ export async function createProduct(
     updatedAt: now,
   };
 
-  if (!db || !isFirebaseConfigured) {
-    const custom = getLocalCustomProducts();
-    custom.unshift(product);
-    setLocalCustomProducts(custom);
-    return product;
+  const custom = getLocalCustomProducts();
+  custom.unshift(product);
+  setLocalCustomProducts(custom);
+
+  if (db && isFirebaseConfigured) {
+    try {
+      const ref = doc(collection(db, 'products'), id);
+      await setDoc(ref, { ...product, isDemoData: true }, { merge: true });
+    } catch (err: any) {
+      console.warn('[Firestore] Could not sync new product to Firestore (saved locally):', err?.message || err);
+    }
   }
 
-  const ref = doc(collection(db, 'products'), id);
-  await setDoc(ref, product);
   return product;
 }
 
@@ -582,27 +756,46 @@ export async function updateProduct(
     }
   }
 
-  if (!db || !isFirebaseConfigured) {
-    const custom = getLocalCustomProducts();
-    const idx = custom.findIndex((p) => p.id === id);
-    if (idx !== -1) {
-      custom[idx] = { ...custom[idx], ...updatePayload };
-      setLocalCustomProducts(custom);
-    }
-    return;
+  // 1. Always save product override locally so catalog updates persist across refreshes!
+  setLocalProductOverride(id, updatePayload);
+
+  // 2. Update custom products if present
+  const custom = getLocalCustomProducts();
+  const idx = custom.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    custom[idx] = { ...custom[idx], ...updatePayload };
+    setLocalCustomProducts(custom);
   }
 
-  await updateDoc(doc(db, 'products', id), updatePayload);
+  // 3. Update in memory ALL_DEMO_PRODUCTS if present
+  const demoIdx = ALL_DEMO_PRODUCTS.findIndex((p) => p.id === id);
+  if (demoIdx !== -1) {
+    ALL_DEMO_PRODUCTS[demoIdx] = { ...ALL_DEMO_PRODUCTS[demoIdx], ...updatePayload };
+  }
+
+  // 4. Try Firestore sync without failing or crashing on permission errors
+  if (db && isFirebaseConfigured) {
+    try {
+      await setDoc(doc(db, 'products', id), { ...updatePayload, isDemoData: true }, { merge: true });
+    } catch (err: any) {
+      console.warn('[Firestore] Could not sync product update to Firestore (saved locally):', err?.message || err);
+    }
+  }
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  if (!db || !isFirebaseConfigured) {
-    const custom = getLocalCustomProducts().filter((p) => p.id !== id);
-    setLocalCustomProducts(custom);
-    return;
-  }
+  const custom = getLocalCustomProducts().filter((p) => p.id !== id);
+  setLocalCustomProducts(custom);
 
-  await deleteDoc(doc(db, 'products', id));
+  addLocalDeletedProductId(id);
+
+  if (db && isFirebaseConfigured) {
+    try {
+      await deleteDoc(doc(db, 'products', id));
+    } catch (err: any) {
+      console.warn('[Firestore] Could not sync product deletion to Firestore (removed locally):', err?.message || err);
+    }
+  }
 }
 
 export async function getShopById(shopId: string): Promise<Shop | null> {
@@ -613,12 +806,13 @@ export async function getShopById(shopId: string): Promise<Shop | null> {
       ? 'SHOP_02'
       : shopId;
 
+  let foundShop: Shop | null = null;
+
   if (db && isFirebaseConfigured) {
     try {
       const snap = await getDoc(doc(db, 'shops', normId));
       if (snap.exists()) {
-        const data = snap.data() as Shop;
-        return { ...data, id: snap.id };
+        foundShop = { id: snap.id, ...(snap.data() as Omit<Shop, 'id'>) };
       }
     } catch (e) {
       console.warn('[Shops] Could not fetch shop from Firestore:', e);
@@ -626,14 +820,33 @@ export async function getShopById(shopId: string): Promise<Shop | null> {
   }
 
   // Check local cache / sample shops
-  const local = getLocalTwoKiranaShops();
-  const found = local.find((s) => s.id === normId);
-  if (found) return found;
+  if (!foundShop) {
+    const local = getLocalTwoKiranaShops();
+    const found = local.find((s) => s.id === normId);
+    if (found) foundShop = { ...found };
+  }
 
-  const sample = SAMPLE_SHOPS.find((s) => s.id === normId);
-  if (sample) return sample;
+  if (!foundShop) {
+    const sample = SAMPLE_SHOPS.find((s) => s.id === normId);
+    if (sample) foundShop = { ...sample };
+  }
 
-  return null;
+  if (!foundShop) {
+    const custom = getLocalCustomShops().find((s) => s.id === normId);
+    if (custom) foundShop = { ...custom };
+  }
+
+  if (foundShop) {
+    const overrides = getLocalShopOverrides();
+    if (overrides[normId]) {
+      foundShop = { ...foundShop, ...overrides[normId] };
+    }
+    if (normId === 'SHOP_01' || normId === 'SHOP_02') {
+      foundShop.approvalStatus = 'approved';
+    }
+  }
+
+  return foundShop;
 }
 
 export async function updateShopPaymentMethods(

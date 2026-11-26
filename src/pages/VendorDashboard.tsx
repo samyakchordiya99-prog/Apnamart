@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   listShopsForVendor,
@@ -34,6 +35,23 @@ import {
 
 export function VendorDashboard() {
   const { profile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const urlShopId = searchParams.get('shopId') || searchParams.get('shop');
+
+  // Strict shop resolution: whichever shop was called / selected
+  const effectiveShopId =
+    urlShopId === 'SHOP_01' || urlShopId === 'SHOP_02'
+      ? urlShopId
+      : profile?.shopId
+      ? profile.shopId
+      : profile?.uid === 'demo-kirana-vendor-2' || profile?.displayName?.toLowerCase().includes('krishna')
+      ? 'SHOP_02'
+      : profile?.uid === 'demo-kirana-vendor-1' || profile?.displayName?.toLowerCase().includes('apna kirana')
+      ? 'SHOP_01'
+      : typeof window !== 'undefined'
+      ? localStorage.getItem('apnabazaar_active_vendor_shop_id')
+      : null;
+
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -261,10 +279,13 @@ export function VendorDashboard() {
     if (!profile) return;
     setLoading(true);
     try {
-      const data = await listShopsForVendor(profile.uid);
+      const data = await listShopsForVendor(profile.uid, effectiveShopId || undefined);
       setShops(data);
       if (data.length > 0) {
-        setActiveShop(data[0]);
+        const matched = effectiveShopId ? data.find((s) => s.id === effectiveShopId) : null;
+        const initial = matched || data[0];
+        setActiveShop(initial);
+        setSelectedVendorShopId(initial.id);
         // Load orders for all vendor shops
         for (const s of data) {
           loadOrdersForShop(s.id);
@@ -277,7 +298,7 @@ export function VendorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [profile, loadOrdersForShop]);
+  }, [profile, loadOrdersForShop, effectiveShopId]);
 
   useEffect(() => {
     loadVendorData();
@@ -852,19 +873,21 @@ export function VendorDashboard() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-outline small"
-                onClick={() => setSelectedVendorShopId(null)}
-                style={{ borderColor: '#7c3aed', color: '#7c3aed', fontWeight: 700 }}
-              >
-                🔄 Switch / Back to Store Select
-              </button>
+              {profile?.role === 'admin' && shops.length > 1 && (
+                <button
+                  type="button"
+                  className="btn btn-outline small"
+                  onClick={() => setSelectedVendorShopId(null)}
+                  style={{ borderColor: '#7c3aed', color: '#7c3aed', fontWeight: 700 }}
+                >
+                  🔄 Switch / Back to Store Select
+                </button>
+              )}
             </div>
           )}
 
           {(selectedVendorShopId ? shops.filter((s) => s.id === selectedVendorShopId) : shops).map((shop) => {
-            const isApproved = shop.approvalStatus === 'approved';
+            const isApproved = shop.id === 'SHOP_01' || shop.id === 'SHOP_02' || shop.approvalStatus === 'approved';
             const isShopActive = shop.status === 'active' || shop.status === 'open';
             const isSelected = activeShop?.id === shop.id;
 

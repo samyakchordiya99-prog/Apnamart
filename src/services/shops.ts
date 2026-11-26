@@ -290,48 +290,59 @@ export async function syncTwoKiranaShopsWithFirestore(customerLoc: {
 }): Promise<Shop[]> {
   const demoShops = createTwoKiranaShopsForLocation(customerLoc);
 
-  // 1. Always cache locally so offline / unauthenticated reads succeed seamlessly
-  setLocalTwoKiranaShops(demoShops);
-
-  // 2. If Firebase is connected, check if shops already exist before blindly overwriting
+  // 1. If Firebase is connected, check existing shops first to preserve vendor updates!
   if (db && isFirebaseConfigured) {
     try {
-      // Check existing shop 1 - don't overwrite vendor's updated shop details
       const s1Snap = await getDoc(doc(db, 'shops', demoShops[0].id)).catch(() => null);
+      const s2Snap = await getDoc(doc(db, 'shops', demoShops[1].id)).catch(() => null);
+
+      const s1Data = s1Snap?.exists() ? (s1Snap.data() as Partial<Shop>) : null;
+      const s2Data = s2Snap?.exists() ? (s2Snap.data() as Partial<Shop>) : null;
+
+      // Merge vendor-customized data with customer's location
+      const shop1: Shop = {
+        ...demoShops[0],
+        ...(s1Data || {}),
+        id: demoShops[0].id,
+        location: demoShops[0].location,
+        approvalStatus: 'approved',
+      };
+
+      const shop2: Shop = {
+        ...demoShops[1],
+        ...(s2Data || {}),
+        id: demoShops[1].id,
+        location: demoShops[1].location,
+        approvalStatus: 'approved',
+      };
+
+      // Persist to Firestore: create if missing, or update location if existing
       if (!s1Snap?.exists()) {
-        await setDoc(doc(db, 'shops', demoShops[0].id), demoShops[0], { merge: true });
+        await setDoc(doc(db, 'shops', demoShops[0].id), cleanFirestoreData(shop1), { merge: true });
       } else {
         await setDoc(doc(db, 'shops', demoShops[0].id), { location: demoShops[0].location }, { merge: true });
       }
 
-      // Check existing shop 2 - don't overwrite vendor's updated shop details
-      const s2Snap = await getDoc(doc(db, 'shops', demoShops[1].id)).catch(() => null);
       if (!s2Snap?.exists()) {
-        await setDoc(doc(db, 'shops', demoShops[1].id), demoShops[1], { merge: true });
+        await setDoc(doc(db, 'shops', demoShops[1].id), cleanFirestoreData(shop2), { merge: true });
       } else {
         await setDoc(doc(db, 'shops', demoShops[1].id), { location: demoShops[1].location }, { merge: true });
       }
 
-      // Read back from Firestore to verify persistence with vendor's latest updates
-      const snap = await getDocs(collection(db, 'shops'));
-      const firestoreShops = snap.docs
-        .map((d) => ({ id: d.id, ...(d.data() as Omit<Shop, 'id'>) }))
-        .filter((s) => s.id === 'SHOP_01' || s.id === 'SHOP_02' || s.id === DEMO_KIRANA_SHOP_1_ID || s.id === DEMO_KIRANA_SHOP_2_ID || s.isDemo);
+      let selected = applyShopOverrides([shop1, shop2]);
+      setLocalTwoKiranaShops(selected);
 
-      if (firestoreShops.length >= 2) {
-        let selected = firestoreShops.slice(0, 2);
-        selected = applyShopOverrides(selected);
-        for (const s of selected) {
-          s.products = await listProductsForShop(s.id);
-        }
-        return selected;
+      for (const s of selected) {
+        s.products = await listProductsForShop(s.id);
       }
+      return selected;
     } catch (err) {
       console.warn('[Firestore] Could not save shops to Firestore (falling back to local cache):', err);
     }
   }
 
   let localResult = applyShopOverrides(demoShops);
+  setLocalTwoKiranaShops(localResult);
   for (const s of localResult) {
     s.products = await listProductsForShop(s.id);
   }
@@ -350,14 +361,17 @@ export async function listAllShops(): Promise<Shop[]> {
           ...(d.data() as Omit<Shop, 'id'>),
         }));
 
-        const demoShops = shops.filter(
-          (s) => s.id === 'SHOP_01' || s.id === 'SHOP_02' || s.id === 'apnabazaar-kirana-1' || s.id === 'apnabazaar-kirana-2' || s.isDemo
-        );
+        const s1 = shops.find((s) => s.id === 'SHOP_01' || s.id === DEMO_KIRANA_SHOP_1_ID);
+        const s2 = shops.find((s) => s.id === 'SHOP_02' || s.id === DEMO_KIRANA_SHOP_2_ID);
+        const paired: Shop[] = [];
+        if (s1) paired.push(s1);
+        if (s2) paired.push(s2);
+        for (const s of shops) {
+          if (!paired.some((p) => p.id === s.id)) paired.push(s);
+        }
 
-        if (demoShops.length > 0) {
-          result = demoShops.slice(0, 2);
-        } else if (shops.length > 0) {
-          result = shops.slice(0, 2);
+        if (paired.length > 0) {
+          result = paired.slice(0, 2);
         }
       }
     } catch (err) {
@@ -577,14 +591,14 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
       ? 'SHOP_02'
       : shopId;
 
-  // 1. ALWAYS start with the full catalogue dataset (130 products) for this shop
+  // 1. Start with the full catalogue dataset (baseline for products NOT yet edited by vendor)
   const demoList = getDemoProductsForShop(normalizedShopId);
   const productMap = new Map<string, Product>();
   for (const item of demoList) {
     productMap.set(item.id, { ...item });
   }
 
-  // 2. Fetch all Firestore products for this shop (vendor edits or vendor-added products)
+  // 2. Fetch Firestore products — Firestore WINS over demo defaults (vendor edits are authoritative)
   if (db && isFirebaseConfigured) {
     try {
       const q = query(
@@ -613,14 +627,17 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
               : 15;
           const isAvailable = stockQuantity > 0;
 
+          // Existing demo product is used ONLY as a fallback for fields missing in Firestore doc
           const existing = productMap.get(d.id);
           const mergedProd: Product = {
+            // Start from existing demo (for fields like brand, imageUrl if not overridden)
             ...(existing || {}),
+            // Then apply everything from Firestore — Firestore fields always win
             ...data,
             id: d.id,
             productId: data.productId || d.id,
             shopId: normalizedShopId,
-            shopName: data.shopName || (normalizedShopId === 'SHOP_01' ? 'Apna Kirana (Shop 1)' : 'Apna Kirana (Shop 2)'),
+            shopName: data.shopName || (normalizedShopId === 'SHOP_01' ? 'Apna Kirana & General Store' : 'Shri Krishna Kirana & Provision Store'),
             vendorId: data.vendorId || existing?.vendorId || 'demo-vendor-1',
             name: data.productName || data.name || existing?.name || 'Grocery Item',
             productName: data.productName || data.name || existing?.name || 'Grocery Item',
@@ -636,6 +653,7 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
             stock: stockQuantity,
             availableStock: stockQuantity,
             unit: data.unit || existing?.unit || 'piece',
+            // imageUrl from Firestore wins if present, else keep the demo SVG/URL
             imageUrl: data.imageUrl || existing?.imageUrl || '',
             imageSource: data.imageSource || existing?.imageSource || 'bigbasket_cdn',
             imageMatchStatus: data.imageMatchStatus || existing?.imageMatchStatus || 'verified',
@@ -666,7 +684,7 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
     } catch {}
   }
 
-  // 3. Include custom products created by the user for this shop
+  // 3. Include custom products created by the user for this shop (vendor-added new products)
   const customProds = getLocalCustomProducts().filter((p) => p.shopId === normalizedShopId);
   for (const cp of customProds) {
     if (!productMap.has(cp.id)) {
@@ -680,16 +698,34 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
     productMap.delete(delId);
   }
 
-  // 5. Convert map to array and apply any local overrides
-  const result = Array.from(productMap.values());
+  // 5. Convert map to array — preserve pristine catalog order from demoList
+  const demoOrderMap = new Map<string, number>();
+  demoList.forEach((item, idx) => {
+    demoOrderMap.set(item.id, idx);
+    demoOrderMap.set(item.productId || item.id, idx);
+  });
+
+  const result = Array.from(productMap.values())
+    .sort((a, b) => {
+      const aKey = a.productId || a.id;
+      const bKey = b.productId || b.id;
+      const aOrder = demoOrderMap.has(aKey) ? demoOrderMap.get(aKey)! : 999999;
+      const bOrder = demoOrderMap.has(bKey) ? demoOrderMap.get(bKey)! : 999999;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
+
   return applyProductOverrides(result);
 }
 
 export async function listAllProducts(): Promise<Product[]> {
   const map = new Map<string, Product>();
-  for (const p of ALL_DEMO_PRODUCTS) {
+  const demoOrderMap = new Map<string, number>();
+  ALL_DEMO_PRODUCTS.forEach((p, idx) => {
     map.set(p.id, { ...p });
-  }
+    demoOrderMap.set(p.id, idx);
+    demoOrderMap.set(p.productId || p.id, idx);
+  });
 
   if (db && isFirebaseConfigured) {
     try {
@@ -783,7 +819,16 @@ export async function listAllProducts(): Promise<Product[]> {
     map.delete(delId);
   }
 
-  return applyProductOverrides(Array.from(map.values()));
+  const allResult = Array.from(map.values()).sort((a, b) => {
+    const aKey = a.productId || a.id;
+    const bKey = b.productId || b.id;
+    const aOrder = demoOrderMap.has(aKey) ? demoOrderMap.get(aKey)! : 999999;
+    const bOrder = demoOrderMap.has(bKey) ? demoOrderMap.get(bKey)! : 999999;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
+
+  return applyProductOverrides(allResult);
 }
 
 export async function createProduct(
@@ -834,14 +879,26 @@ export async function updateProduct(
 
   if (data.availableStock !== undefined) {
     updatePayload.stock = data.availableStock;
+    updatePayload.stockQuantity = data.availableStock;
     if (data.availabilityStatus === undefined) {
       updatePayload.availabilityStatus = data.availableStock > 0 ? 'in_stock' : 'out_of_stock';
+      updatePayload.isAvailable = data.availableStock > 0;
     }
   } else if (data.stock !== undefined) {
     updatePayload.availableStock = data.stock;
+    updatePayload.stockQuantity = data.stock;
     if (data.availabilityStatus === undefined) {
       updatePayload.availabilityStatus = data.stock > 0 ? 'in_stock' : 'out_of_stock';
+      updatePayload.isAvailable = data.stock > 0;
     }
+  }
+
+  if (data.price !== undefined) {
+    updatePayload.sellingPrice = data.price;
+    updatePayload.mrp = data.price;
+  }
+  if (data.sellingPrice !== undefined) {
+    updatePayload.price = data.sellingPrice;
   }
 
   // 1. Always save product override locally so catalog updates persist across refreshes!
@@ -855,30 +912,36 @@ export async function updateProduct(
     setLocalCustomProducts(custom);
   }
 
-  // 3. Update in memory ALL_DEMO_PRODUCTS if present
+  // 3. Find the original product from demo set for a full write
   const demoIdx = ALL_DEMO_PRODUCTS.findIndex((p) => p.id === id);
+  const originalDemo = demoIdx !== -1 ? ALL_DEMO_PRODUCTS[demoIdx] : null;
+
+  // 4. Update in-memory ALL_DEMO_PRODUCTS so this session reflects the change
   if (demoIdx !== -1) {
     ALL_DEMO_PRODUCTS[demoIdx] = { ...ALL_DEMO_PRODUCTS[demoIdx], ...updatePayload };
   }
 
-  // 4. Construct FULL product document and save to Firebase Firestore
+  // 5. Write COMPLETE product document to Firebase Firestore (not just diff)
   if (db && isFirebaseConfigured) {
     try {
-      const existingProduct =
-        (demoIdx !== -1 ? ALL_DEMO_PRODUCTS[demoIdx] : null) ||
-        (idx !== -1 ? custom[idx] : null) ||
-        {};
+      // Build a full product document by merging the original baseline with updates
+      const baseProduct: any = originalDemo
+        ? { ...originalDemo }
+        : idx !== -1
+        ? { ...custom[idx] }
+        : { id };
 
       const fullProduct = cleanFirestoreData({
-        ...existingProduct,
+        ...baseProduct,
         ...updatePayload,
         id,
+        productId: id,
         isDemoData: true,
         updatedAt: now,
       });
 
       await setDoc(doc(db, 'products', id), fullProduct, { merge: true });
-      console.log(`[Firestore] Successfully saved product ${id} to Firebase!`);
+      console.log(`[Firestore] ✅ Saved product ${id} permanently to Firebase!`);
     } catch (err: any) {
       console.warn('[Firestore] Could not sync product update to Firestore (saved locally):', err?.message || err);
     }

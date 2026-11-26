@@ -254,15 +254,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/263526_24-britannia-good-day-cashew-cookies.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/nutrichoice-digestive.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795057808680,
-    "updatedAt": 1795057808680
+    "updatedAt": 1795699494444
   },
   {
     "id": "SHOP_01_PROD_010",
@@ -515,15 +515,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/30007756_3-tata-sampann-unpolished-moong-dal-split-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/yellow-moong-dal-dhuli.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058348680,
-    "updatedAt": 1795058348680
+    "updatedAt": 1795699494444
   },
   {
     "id": "SHOP_01_PROD_019",
@@ -544,15 +544,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 15,
     "availableStock": 15,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/20005213_5-tata-sampann-moong-whole-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/green-moong-dal-chilka.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058408680,
-    "updatedAt": 1795058408680
+    "updatedAt": 1795699494445
   },
   {
     "id": "SHOP_01_PROD_020",
@@ -660,15 +660,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40017980_5-tata-sampann-unpolished-urad-dal-whole-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/white-urad-dal-dhuli.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058648680,
-    "updatedAt": 1795058648680
+    "updatedAt": 1795699494445
   },
   {
     "id": "SHOP_01_PROD_024",
@@ -776,15 +776,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 15,
     "availableStock": 15,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/20005213_5-tata-sampann-moong-whole-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-moong-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058888680,
-    "updatedAt": 1795058888680
+    "updatedAt": 1795699494446
   },
   {
     "id": "SHOP_01_PROD_028",
@@ -805,15 +805,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 16,
     "availableStock": 16,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40317524_1-tata-sampann-unpolished-kala-chana-500-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-kala-chana-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058948680,
-    "updatedAt": 1795058948680
+    "updatedAt": 1795699494446
   },
   {
     "id": "SHOP_01_PROD_029",
@@ -892,15 +892,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40317524_1-tata-sampann-unpolished-kala-chana-500-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-matki-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059128680,
-    "updatedAt": 1795059128680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_032",
@@ -1038,14 +1038,14 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "availableStock": 38,
     "unit": "g",
     "imageUrl": "https://www.bbassets.com/media/uploads/p/l/102761_17-kurkure-namkeen-masala-munch-85-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059428680,
-    "updatedAt": 1795059428680
+    "updatedAt": 1795699533407
   },
   {
     "id": "SHOP_01_PROD_037",
@@ -1588,15 +1588,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "litre",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/265690_16-maaza-mango-drink.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/real-mixed-fruit.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795060568680,
-    "updatedAt": 1795060568680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_056",
@@ -2516,15 +2516,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40017980_5-tata-sampann-unpolished-urad-dal-whole-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/black-urad-dal-chilka.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795062488680,
-    "updatedAt": 1795062488680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_088",
@@ -2545,15 +2545,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 12,
     "availableStock": 12,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000271_14-fresho-sprouted-mixed.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-soybean-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795062548680,
-    "updatedAt": 1795062548680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_089",
@@ -2806,15 +2806,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "pack",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40019318_5-cadbury-oreo-vanilla-sandwich-biscuits-120-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/ferrero-rocher.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063088680,
-    "updatedAt": 1795063088680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_098",
@@ -2893,15 +2893,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/40026515_4-harvest-gold-bread-white.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/brown-bread.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063268680,
-    "updatedAt": 1795063268680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_101",
@@ -2951,15 +2951,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000081_19-tata-tea-premium-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/red-label-tea.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063388680,
-    "updatedAt": 1795063388680
+    "updatedAt": 1795699494447
   },
   {
     "id": "SHOP_01_PROD_103",
@@ -3096,15 +3096,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 10,
     "availableStock": 10,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/261018_13-johnsons-baby-no-more-tears-baby-shampoo-50-ml.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/cerelac-wheat-apple.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063688680,
-    "updatedAt": 1795063688680
+    "updatedAt": 1795699494448
   },
   {
     "id": "SHOP_01_PROD_108",
@@ -3125,15 +3125,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 12,
     "availableStock": 12,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/266560_11-mccain-french-fries-crispy-420-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/mccain-aloo-tikki.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063748680,
-    "updatedAt": 1795063748680
+    "updatedAt": 1795699494448
   },
   {
     "id": "SHOP_01_PROD_109",
@@ -3183,15 +3183,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 30,
     "availableStock": 30,
     "unit": "pack",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/100015270_4-cycle-all-in-1-assorted-pack-of-cycle-pure-agarbathis-8-pcs-carton.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/cotton-diya-wicks.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063868680,
-    "updatedAt": 1795063868680
+    "updatedAt": 1795699494448
   },
   {
     "id": "SHOP_01_PROD_111",
@@ -3299,15 +3299,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 10,
     "availableStock": 10,
     "unit": "kg",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/126906_10-aashirvaad-atta-whole-wheat.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fortune-chakki-atta.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064108680,
-    "updatedAt": 1795064108680
+    "updatedAt": 1795699494448
   },
   {
     "id": "SHOP_01_PROD_115",
@@ -3328,15 +3328,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "litre",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/274145_14-fortune-sunlite-refined-sunflower-oil.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/saffola-gold-oil.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064168680,
-    "updatedAt": 1795064168680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_116",
@@ -3357,15 +3357,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 22,
     "availableStock": 22,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000527_10-everest-garam-masala.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/mdh-deggi-mirch.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064228680,
-    "updatedAt": 1795064228680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_117",
@@ -3386,15 +3386,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000527_10-everest-garam-masala.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/catch-garam-masala.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064288680,
-    "updatedAt": 1795064288680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_118",
@@ -3473,15 +3473,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 35,
     "availableStock": 35,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/20005908_1-sunfeast-dark-fantasy-choco-fills-75-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/madhur-crystal-sugar.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064468680,
-    "updatedAt": 1795064468680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_121",
@@ -3502,15 +3502,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/20005908_1-sunfeast-dark-fantasy-choco-fills-75-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/uttam-sugar.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064528680,
-    "updatedAt": 1795064528680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_122",
@@ -3589,15 +3589,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000081_19-tata-tea-premium-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/red-label-natural-care.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064708680,
-    "updatedAt": 1795064708680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_125",
@@ -3676,15 +3676,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/30007762_3-tata-sampann-dalia-broken-wheat-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/jowar-whole-grain.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064888680,
-    "updatedAt": 1795064888680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_128",
@@ -3705,15 +3705,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 22,
     "availableStock": 22,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/30007762_3-tata-sampann-dalia-broken-wheat-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/bajra-whole-grain.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064948680,
-    "updatedAt": 1795064948680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_129",
@@ -3734,15 +3734,15 @@ export const SHOP_01_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000451_15-bb-royal-ragi.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/ragi-whole-grain.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795065008680,
-    "updatedAt": 1795065008680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_01_PROD_130",
@@ -3795,15 +3795,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 22,
     "availableStock": 22,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40174323_7-parle-g-gluco-biscuits-800-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/parle-krackjack.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795057328680,
-    "updatedAt": 1795057328680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_02_PROD_002",
@@ -3853,15 +3853,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 25,
     "availableStock": 25,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40001606_21-britannia-good-day-cashew-cookies.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/good-day-butter.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795057448680,
-    "updatedAt": 1795057448680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_02_PROD_004",
@@ -3969,15 +3969,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 28,
     "availableStock": 28,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/263526_24-britannia-good-day-cashew-cookies.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/priyagold-butter-bite.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795057688680,
-    "updatedAt": 1795057688680
+    "updatedAt": 1795699494449
   },
   {
     "id": "SHOP_02_PROD_008",
@@ -4375,15 +4375,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 25,
     "availableStock": 25,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/30007756_3-tata-sampann-unpolished-moong-dal-split-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/yellow-moong-dal-dhuli.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058528680,
-    "updatedAt": 1795058528680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_022",
@@ -4462,15 +4462,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40317524_1-tata-sampann-unpolished-kala-chana-500-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/clean-whole-matki.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058708680,
-    "updatedAt": 1795058708680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_025",
@@ -4491,15 +4491,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000271_14-fresho-sprouted-mixed.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-moong-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058768680,
-    "updatedAt": 1795058768680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_026",
@@ -4520,15 +4520,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 16,
     "availableStock": 16,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000271_14-fresho-sprouted-mixed.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-kala-chana-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058828680,
-    "updatedAt": 1795058828680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_027",
@@ -4549,15 +4549,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 15,
     "availableStock": 15,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40317524_1-tata-sampann-unpolished-kala-chana-500-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-matki-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058888680,
-    "updatedAt": 1795058888680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_028",
@@ -4578,15 +4578,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40317524_1-tata-sampann-unpolished-kala-chana-500-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-tri-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795058948680,
-    "updatedAt": 1795058948680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_029",
@@ -4869,14 +4869,14 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "availableStock": 35,
     "unit": "g",
     "imageUrl": "https://www.bbassets.com/media/uploads/p/l/102761_17-kurkure-namkeen-masala-munch-85-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059548680,
-    "updatedAt": 1795059548680
+    "updatedAt": 1795699533409
   },
   {
     "id": "SHOP_02_PROD_039",
@@ -4926,15 +4926,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "kg",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/126906_10-aashirvaad-atta-whole-wheat.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fortune-chakki-atta.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059668680,
-    "updatedAt": 1795059668680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_041",
@@ -4955,15 +4955,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "ml",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40054553_2-amul-pure-ghee-500-ml-tin.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/patanjali-cow-ghee.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059728680,
-    "updatedAt": 1795059728680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_042",
@@ -4984,15 +4984,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 16,
     "availableStock": 16,
     "unit": "litre",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/274145_14-fortune-sunlite-refined-sunflower-oil.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/saffola-gold-oil.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059788680,
-    "updatedAt": 1795059788680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_043",
@@ -5013,15 +5013,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "litre",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/274145_14-fortune-sunlite-refined-sunflower-oil.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fortune-mustard-oil.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059848680,
-    "updatedAt": 1795059848680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_044",
@@ -5042,15 +5042,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 25,
     "availableStock": 25,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000527_10-everest-garam-masala.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/catch-haldi.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795059908680,
-    "updatedAt": 1795059908680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_045",
@@ -5158,15 +5158,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 22,
     "availableStock": 22,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/126906_10-aashirvaad-atta-whole-wheat.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/harvest-gold-atta-bread.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795060148680,
-    "updatedAt": 1795060148680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_049",
@@ -5303,15 +5303,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 15,
     "availableStock": 15,
     "unit": "litre",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/251019_11-fanta-soft-drink-orange-flavoured.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/minute-maid-orange.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795060448680,
-    "updatedAt": 1795060448680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_054",
@@ -5361,15 +5361,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 40,
     "availableStock": 40,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/100021022_10-cadbury-5-star-chocolate-bar.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/nestle-munch.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795060568680,
-    "updatedAt": 1795060568680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_056",
@@ -5535,15 +5535,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40007826_1-nescafe-classic-instant-coffee-100-g-glass-jar.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/tata-coffee-grand.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795060928680,
-    "updatedAt": 1795060928680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_062",
@@ -5767,15 +5767,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000060_21-dove-cream-beauty-bathing-bar-75-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/sebamed-baby-bar.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795061408680,
-    "updatedAt": 1795061408680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_070",
@@ -5796,15 +5796,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 12,
     "availableStock": 12,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/40072320_2-eggoz-farm-fresh-white-eggs.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/mccain-burger-patty.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795061468680,
-    "updatedAt": 1795061468680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_071",
@@ -5825,15 +5825,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 10,
     "availableStock": 10,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/266560_11-mccain-french-fries-crispy-420-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/cheesy-corn-triangles.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795061528680,
-    "updatedAt": 1795061528680
+    "updatedAt": 1795699494450
   },
   {
     "id": "SHOP_02_PROD_072",
@@ -5883,15 +5883,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "ml",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40019084_1-patanjali-cow-ghee-500-g-pack.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/patanjali-til-oil.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795061648680,
-    "updatedAt": 1795061648680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_074",
@@ -6028,15 +6028,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "kg",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/40033819_29-fresho-apple-royal-gala.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-mosambi.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795061948680,
-    "updatedAt": 1795061948680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_079",
@@ -6463,15 +6463,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 15,
     "availableStock": 15,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/20005213_5-tata-sampann-moong-whole-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/green-moong-dal-chilka.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795062848680,
-    "updatedAt": 1795062848680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_094",
@@ -6492,15 +6492,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40017980_5-tata-sampann-unpolished-urad-dal-whole-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/white-urad-dal-dhuli.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795062908680,
-    "updatedAt": 1795062908680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_095",
@@ -6579,15 +6579,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 12,
     "availableStock": 12,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000271_14-fresho-sprouted-mixed.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/fresh-soybean-sprouts.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063088680,
-    "updatedAt": 1795063088680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_098",
@@ -6985,15 +6985,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 40,
     "availableStock": 40,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/20005908_1-sunfeast-dark-fantasy-choco-fills-75-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/madhur-crystal-sugar.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795063928680,
-    "updatedAt": 1795063928680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_112",
@@ -7130,15 +7130,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/30007762_3-tata-sampann-dalia-broken-wheat-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/jowar-whole-grain.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064228680,
-    "updatedAt": 1795064228680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_117",
@@ -7159,15 +7159,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/30007762_3-tata-sampann-dalia-broken-wheat-500-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/bajra-whole-grain.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064288680,
-    "updatedAt": 1795064288680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_118",
@@ -7188,15 +7188,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 16,
     "availableStock": 16,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000442_18-bb-royal-sabudana-sago.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/ragi-whole-grain.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064348680,
-    "updatedAt": 1795064348680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_119",
@@ -7217,15 +7217,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 22,
     "availableStock": 22,
     "unit": "kg",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/190594_9-india-gate-basmati-rice-super.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/poha-thin.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064408680,
-    "updatedAt": 1795064408680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_120",
@@ -7275,15 +7275,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "kg",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000442_18-bb-royal-sabudana-sago.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/dalia-broken-wheat.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064528680,
-    "updatedAt": 1795064528680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_122",
@@ -7304,15 +7304,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/104808_9-amul-cheese-slices.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/amul-mozzarella.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064588680,
-    "updatedAt": 1795064588680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_123",
@@ -7333,15 +7333,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 22,
     "availableStock": 22,
     "unit": "g",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/40026515_4-harvest-gold-bread-white.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/brown-bread.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064648680,
-    "updatedAt": 1795064648680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_124",
@@ -7391,15 +7391,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/100022528_6-haldirams-namkeen-navratan-mix-150-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/haldirams-bhelpuri.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064768680,
-    "updatedAt": 1795064768680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_126",
@@ -7420,15 +7420,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 28,
     "availableStock": 28,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/40019318_5-cadbury-oreo-vanilla-sandwich-biscuits-120-g-pouch.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/oreo-lemon-cream.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064828680,
-    "updatedAt": 1795064828680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_127",
@@ -7449,15 +7449,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 14,
     "availableStock": 14,
     "unit": "ml",
-    "imageUrl": "https://www.bigbasket.com/media/uploads/p/l/10000084_15-rin-advanced-detergent-powder.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/surf-excel-matic-liquid.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064888680,
-    "updatedAt": 1795064888680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_128",
@@ -7478,15 +7478,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 20,
     "availableStock": 20,
     "unit": "ml",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000060_21-dove-cream-beauty-bathing-bar-75-g.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/himalaya-neem-face-wash.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795064948680,
-    "updatedAt": 1795064948680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_129",
@@ -7507,15 +7507,15 @@ export const SHOP_02_PRODUCTS: Product[] = [
     "stock": 18,
     "availableStock": 18,
     "unit": "g",
-    "imageUrl": "https://www.bbassets.com/media/uploads/p/l/10000081_19-tata-tea-premium.jpg",
-    "imageSource": "bigbasket_cdn",
+    "imageUrl": "/products/tata-tea-gold.svg",
+    "imageSource": "apnamart_authentic_packshot",
     "imageMatchStatus": "verified",
     "imageMatchType": "exact_product",
     "isAvailable": true,
     "isDemoData": true,
     "availabilityStatus": "in_stock",
     "createdAt": 1795065008680,
-    "updatedAt": 1795065008680
+    "updatedAt": 1795699494451
   },
   {
     "id": "SHOP_02_PROD_130",
@@ -7553,5 +7553,5 @@ export const ALL_DEMO_PRODUCTS: Product[] = [...SHOP_01_PRODUCTS, ...SHOP_02_PRO
 export function getDemoProductsForShop(shopId: string): Product[] {
   if (shopId === 'SHOP_01') return SHOP_01_PRODUCTS;
   if (shopId === 'SHOP_02') return SHOP_02_PRODUCTS;
-  return [];
+  return SHOP_01_PRODUCTS;
 }

@@ -293,23 +293,34 @@ export async function syncTwoKiranaShopsWithFirestore(customerLoc: {
   // 1. Always cache locally so offline / unauthenticated reads succeed seamlessly
   setLocalTwoKiranaShops(demoShops);
 
-  // 2. If Firebase is connected, save both records to Cloud Firestore
+  // 2. If Firebase is connected, check if shops already exist before blindly overwriting
   if (db && isFirebaseConfigured) {
     try {
-      // Save shop 1 with unique ID (avoids duplicates)
-      await setDoc(doc(db, 'shops', demoShops[0].id), demoShops[0], { merge: true });
-      // Save shop 2 with unique ID (avoids duplicates)
-      await setDoc(doc(db, 'shops', demoShops[1].id), demoShops[1], { merge: true });
-      console.log('[Firestore] Successfully synced 2 Kirana shops into "shops" collection.');
+      // Check existing shop 1 - don't overwrite vendor's updated shop details
+      const s1Snap = await getDoc(doc(db, 'shops', demoShops[0].id)).catch(() => null);
+      if (!s1Snap?.exists()) {
+        await setDoc(doc(db, 'shops', demoShops[0].id), demoShops[0], { merge: true });
+      } else {
+        await setDoc(doc(db, 'shops', demoShops[0].id), { location: demoShops[0].location }, { merge: true });
+      }
 
-      // Read back from Firestore to verify persistence
+      // Check existing shop 2 - don't overwrite vendor's updated shop details
+      const s2Snap = await getDoc(doc(db, 'shops', demoShops[1].id)).catch(() => null);
+      if (!s2Snap?.exists()) {
+        await setDoc(doc(db, 'shops', demoShops[1].id), demoShops[1], { merge: true });
+      } else {
+        await setDoc(doc(db, 'shops', demoShops[1].id), { location: demoShops[1].location }, { merge: true });
+      }
+
+      // Read back from Firestore to verify persistence with vendor's latest updates
       const snap = await getDocs(collection(db, 'shops'));
       const firestoreShops = snap.docs
         .map((d) => ({ id: d.id, ...(d.data() as Omit<Shop, 'id'>) }))
         .filter((s) => s.id === 'SHOP_01' || s.id === 'SHOP_02' || s.id === DEMO_KIRANA_SHOP_1_ID || s.id === DEMO_KIRANA_SHOP_2_ID || s.isDemo);
 
       if (firestoreShops.length >= 2) {
-        const selected = firestoreShops.slice(0, 2);
+        let selected = firestoreShops.slice(0, 2);
+        selected = applyShopOverrides(selected);
         for (const s of selected) {
           s.products = await listProductsForShop(s.id);
         }
@@ -320,10 +331,11 @@ export async function syncTwoKiranaShopsWithFirestore(customerLoc: {
     }
   }
 
-  for (const s of demoShops) {
+  let localResult = applyShopOverrides(demoShops);
+  for (const s of localResult) {
     s.products = await listProductsForShop(s.id);
   }
-  return demoShops;
+  return localResult;
 }
 
 export async function listAllShops(): Promise<Shop[]> {
@@ -565,8 +577,14 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
       ? 'SHOP_02'
       : shopId;
 
-  let baseProducts: Product[] = [];
+  // 1. ALWAYS start with the full catalogue dataset (130 products) for this shop
+  const demoList = getDemoProductsForShop(normalizedShopId);
+  const productMap = new Map<string, Product>();
+  for (const item of demoList) {
+    productMap.set(item.id, { ...item });
+  }
 
+  // 2. Fetch all Firestore products for this shop (vendor edits or vendor-added products)
   if (db && isFirebaseConfigured) {
     try {
       const q = query(
@@ -575,7 +593,7 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
       );
       const snap = await getDocs(q);
       if (!snap.empty) {
-        baseProducts = snap.docs.map((d) => {
+        for (const d of snap.docs) {
           const data = d.data() as any;
           const mrp = typeof data.mrp === 'number' ? data.mrp : data.price || 0;
           const discountPercent = typeof data.discountPercent === 'number' ? data.discountPercent : 0;
@@ -595,18 +613,21 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
               : 15;
           const isAvailable = stockQuantity > 0;
 
-          return {
+          const existing = productMap.get(d.id);
+          const mergedProd: Product = {
+            ...(existing || {}),
+            ...data,
             id: d.id,
             productId: data.productId || d.id,
             shopId: normalizedShopId,
             shopName: data.shopName || (normalizedShopId === 'SHOP_01' ? 'Apna Kirana (Shop 1)' : 'Apna Kirana (Shop 2)'),
-            vendorId: data.vendorId || 'demo-vendor-1',
-            name: data.productName || data.name || 'Grocery Item',
-            productName: data.productName || data.name || 'Grocery Item',
-            category: data.category || 'General',
-            brand: data.brand || 'Local Kirana',
-            description: data.description || '',
-            quantityOrPack: data.quantityOrPack || '1 pc',
+            vendorId: data.vendorId || existing?.vendorId || 'demo-vendor-1',
+            name: data.productName || data.name || existing?.name || 'Grocery Item',
+            productName: data.productName || data.name || existing?.name || 'Grocery Item',
+            category: data.category || existing?.category || 'General',
+            brand: data.brand || existing?.brand || 'Local Kirana',
+            description: data.description !== undefined ? data.description : (existing?.description || ''),
+            quantityOrPack: data.quantityOrPack || existing?.quantityOrPack || '1 pc',
             mrp,
             discountPercent,
             sellingPrice,
@@ -614,49 +635,67 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
             stockQuantity,
             stock: stockQuantity,
             availableStock: stockQuantity,
-            unit: data.unit || 'piece',
-            imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80',
-            imageSource: data.imageSource || 'bigbasket_cdn',
-            imageMatchStatus: data.imageMatchStatus || 'verified',
-            imageMatchType: data.imageMatchType || 'exact_product',
+            unit: data.unit || existing?.unit || 'piece',
+            imageUrl: data.imageUrl || existing?.imageUrl || '',
+            imageSource: data.imageSource || existing?.imageSource || 'bigbasket_cdn',
+            imageMatchStatus: data.imageMatchStatus || existing?.imageMatchStatus || 'verified',
+            imageMatchType: data.imageMatchType || existing?.imageMatchType || 'exact_product',
             isAvailable,
             isDemoData: true,
             availabilityStatus: isAvailable ? 'in_stock' : 'out_of_stock',
-            createdAt: data.createdAt || Date.now(),
+            createdAt: data.createdAt || existing?.createdAt || Date.now(),
             updatedAt: data.updatedAt || Date.now(),
-          } as Product;
-        });
+          };
+
+          productMap.set(d.id, mergedProd);
+        }
       }
     } catch (err) {
       console.warn('Failed to query products from Firestore, falling back to local dataset:', err);
     }
+
+    // Check Firestore for tombstoned / deleted products
+    try {
+      const delSnap = await getDocs(collection(db, 'deleted_products')).catch(() => null);
+      if (delSnap && !delSnap.empty) {
+        for (const doc of delSnap.docs) {
+          addLocalDeletedProductId(doc.id);
+          productMap.delete(doc.id);
+        }
+      }
+    } catch {}
   }
 
-  // Fallback to local demo dataset if no products from Firestore
-  if (baseProducts.length === 0) {
-    baseProducts = getDemoProductsForShop(normalizedShopId);
-  }
-
-  // Include custom products created by the user for this shop
+  // 3. Include custom products created by the user for this shop
   const customProds = getLocalCustomProducts().filter((p) => p.shopId === normalizedShopId);
   for (const cp of customProds) {
-    if (!baseProducts.some((bp) => bp.id === cp.id)) {
-      baseProducts.unshift(cp);
+    if (!productMap.has(cp.id)) {
+      productMap.set(cp.id, cp);
     }
   }
 
-  // Apply persistent product overrides and remove deleted items
-  return applyProductOverrides(baseProducts);
+  // 4. Remove any locally deleted products
+  const deletedIds = getLocalDeletedProductIds();
+  for (const delId of deletedIds) {
+    productMap.delete(delId);
+  }
+
+  // 5. Convert map to array and apply any local overrides
+  const result = Array.from(productMap.values());
+  return applyProductOverrides(result);
 }
 
 export async function listAllProducts(): Promise<Product[]> {
-  let all: Product[] = [];
+  const map = new Map<string, Product>();
+  for (const p of ALL_DEMO_PRODUCTS) {
+    map.set(p.id, { ...p });
+  }
 
   if (db && isFirebaseConfigured) {
     try {
       const snap = await getDocs(collection(db, 'products'));
       if (!snap.empty) {
-        all = snap.docs.map((d) => {
+        for (const d of snap.docs) {
           const data = d.data() as any;
           const mrp = typeof data.mrp === 'number' ? data.mrp : data.price || 0;
           const discountPercent = typeof data.discountPercent === 'number' ? data.discountPercent : 0;
@@ -676,7 +715,10 @@ export async function listAllProducts(): Promise<Product[]> {
               : 15;
           const isAvailable = stockQuantity > 0;
 
-          return {
+          const existing = map.get(d.id);
+          const mergedProd: Product = {
+            ...(existing || {}),
+            ...data,
             id: d.id,
             productId: data.productId || d.id,
             shopId: data.shopId || 'SHOP_01',
@@ -685,13 +727,13 @@ export async function listAllProducts(): Promise<Product[]> {
               (data.shopId === 'SHOP_02'
                 ? 'Shri Krishna Kirana & Provision Store'
                 : 'Apna Kirana & General Store'),
-            vendorId: data.vendorId || 'demo-vendor-1',
-            name: data.productName || data.name || 'Grocery Item',
-            productName: data.productName || data.name || 'Grocery Item',
-            category: data.category || 'General',
-            brand: data.brand || 'Local Kirana',
-            description: data.description || '',
-            quantityOrPack: data.quantityOrPack || '1 pc',
+            vendorId: data.vendorId || existing?.vendorId || 'demo-vendor-1',
+            name: data.productName || data.name || existing?.name || 'Grocery Item',
+            productName: data.productName || data.name || existing?.name || 'Grocery Item',
+            category: data.category || existing?.category || 'General',
+            brand: data.brand || existing?.brand || 'Local Kirana',
+            description: data.description !== undefined ? data.description : (existing?.description || ''),
+            quantityOrPack: data.quantityOrPack || existing?.quantityOrPack || '1 pc',
             mrp,
             discountPercent,
             sellingPrice,
@@ -699,36 +741,49 @@ export async function listAllProducts(): Promise<Product[]> {
             stockQuantity,
             stock: stockQuantity,
             availableStock: stockQuantity,
-            unit: data.unit || 'piece',
-            imageUrl: data.imageUrl || '',
-            imageSource: data.imageSource || 'bigbasket_cdn',
-            imageMatchStatus: data.imageMatchStatus || 'verified',
-            imageMatchType: data.imageMatchType || 'exact_product',
+            unit: data.unit || existing?.unit || 'piece',
+            imageUrl: data.imageUrl || existing?.imageUrl || '',
+            imageSource: data.imageSource || existing?.imageSource || 'bigbasket_cdn',
+            imageMatchStatus: data.imageMatchStatus || existing?.imageMatchStatus || 'verified',
+            imageMatchType: data.imageMatchType || existing?.imageMatchType || 'exact_product',
             isAvailable,
             isDemoData: true,
             availabilityStatus: isAvailable ? 'in_stock' : 'out_of_stock',
-            createdAt: data.createdAt || Date.now(),
+            createdAt: data.createdAt || existing?.createdAt || Date.now(),
             updatedAt: data.updatedAt || Date.now(),
-          } as Product;
-        });
+          };
+
+          map.set(d.id, mergedProd);
+        }
       }
     } catch (err) {
       console.warn('Failed to query all products from Firestore:', err);
     }
-  }
 
-  if (all.length === 0) {
-    all = [...ALL_DEMO_PRODUCTS];
+    try {
+      const delSnap = await getDocs(collection(db, 'deleted_products')).catch(() => null);
+      if (delSnap && !delSnap.empty) {
+        for (const doc of delSnap.docs) {
+          addLocalDeletedProductId(doc.id);
+          map.delete(doc.id);
+        }
+      }
+    } catch {}
   }
 
   const customProds = getLocalCustomProducts();
   for (const cp of customProds) {
-    if (!all.some((p) => p.id === cp.id)) {
-      all.unshift(cp);
+    if (!map.has(cp.id)) {
+      map.set(cp.id, cp);
     }
   }
 
-  return applyProductOverrides(all);
+  const deletedIds = getLocalDeletedProductIds();
+  for (const delId of deletedIds) {
+    map.delete(delId);
+  }
+
+  return applyProductOverrides(Array.from(map.values()));
 }
 
 export async function createProduct(
@@ -906,6 +961,9 @@ export async function getShopById(shopId: string): Promise<Shop | null> {
     if (normId === 'SHOP_01' || normId === 'SHOP_02') {
       foundShop.approvalStatus = 'approved';
     }
+    try {
+      foundShop.products = await listProductsForShop(normId);
+    } catch {}
   }
 
   return foundShop;

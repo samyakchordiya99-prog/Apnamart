@@ -12,6 +12,7 @@ import {
 } from '../services/shops';
 import {
   listOrdersForShop,
+  subscribeToOrdersForShop,
   confirmOrderPayment,
   markCashCollected,
   approveOrder,
@@ -303,6 +304,19 @@ export function VendorDashboard() {
   useEffect(() => {
     loadVendorData();
   }, [loadVendorData]);
+
+  // Real-time live order listener for vendor shops
+  useEffect(() => {
+    if (shops.length === 0) return;
+    const unsubs = shops.map((s) =>
+      subscribeToOrdersForShop(s.id, (liveOrders) => {
+        setOrdersByShop((prev) => ({ ...prev, [s.id]: liveOrders }));
+      })
+    );
+    return () => {
+      unsubs.forEach((u) => u());
+    };
+  }, [shops]);
 
   // Handle map position selection
   const handleMapPosition = async (lat: number, lng: number) => {

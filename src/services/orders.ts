@@ -8,6 +8,7 @@ import {
   updateDoc,
   query,
   where,
+  onSnapshot,
 } from 'firebase/firestore';
 import type { Order, OrderItem, PaymentMethod, PaymentStatus } from '../types';
 
@@ -157,6 +158,58 @@ export async function listOrdersForShop(shopId: string): Promise<Order[]> {
 
   localOrders.sort((a, b) => b.createdAt - a.createdAt);
   return localOrders;
+}
+
+/**
+ * Real-time Firestore listener for vendor orders so new customer orders appear live without page refresh.
+ */
+export function subscribeToOrdersForShop(
+  shopId: string,
+  onOrders: (orders: Order[]) => void
+): () => void {
+  const normId =
+    shopId === 'SHOP_01' || shopId.toLowerCase().includes('shop 1') || shopId.toLowerCase().includes('shop_01')
+      ? 'SHOP_01'
+      : shopId === 'SHOP_02' || shopId.toLowerCase().includes('shop 2') || shopId.toLowerCase().includes('shop_02')
+      ? 'SHOP_02'
+      : shopId;
+
+  if (!db || !isFirebaseConfigured) {
+    return () => {};
+  }
+
+  try {
+    const q = query(
+      collection(db, 'orders'),
+      where('shopId', 'in', [normId, shopId])
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        const firestoreOrders: Order[] = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Order, 'id'>),
+        }));
+        const localOrders = getLocalOrders().filter(
+          (o) => o.shopId === normId || o.shopId === shopId
+        );
+        const orderMap = new Map<string, Order>();
+        for (const o of firestoreOrders) orderMap.set(o.id, o);
+        for (const o of localOrders) {
+          if (!orderMap.has(o.id)) orderMap.set(o.id, o);
+        }
+        const all = Array.from(orderMap.values());
+        all.sort((a, b) => b.createdAt - a.createdAt);
+        onOrders(all);
+      },
+      (err) => {
+        console.warn('[Orders] Real-time listener error (check Firestore rules):', err?.message || err);
+      }
+    );
+  } catch (err) {
+    console.warn('[Orders] Could not attach real-time listener:', err);
+    return () => {};
+  }
 }
 
 /**

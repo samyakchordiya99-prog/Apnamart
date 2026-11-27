@@ -98,10 +98,12 @@ export function CheckoutModal({
               ? '/payment-qr/SHOP_01/upi-qr.png'
               : '/payment-qr/SHOP_02/upi-qr.png',
             accountDetails: isShop1
-              ? 'Central Bank of India - 2671'
-              : 'State Bank of India - 4559',
-            upiProvider: 'PhonePe',
-            merchantName: shop.name,
+              ? 'PhonePe QR - Gunwant Yogesh Chaudhari'
+              : 'Google Pay - armanattar311@oksbi',
+            upiProvider: isShop1 ? 'PhonePe' : 'Google Pay',
+            merchantName: isShop1
+              ? 'Gunwant Yogesh Chaudhari (Apna Mart Shop 1)'
+              : 'Arman Attar (Apna Mart Shop 2)',
           });
         }
       } catch (err) {

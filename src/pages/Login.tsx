@@ -102,12 +102,15 @@ export function Login() {
       const isShop2 =
         shopName.toLowerCase().includes('krishna') ||
         shopName.includes('02') ||
+        shopName.toLowerCase().includes('shop 2') ||
+        shopName.toLowerCase().includes('shop2') ||
+        shopName.toLowerCase().includes('shivshankar') ||
         shopName.toLowerCase().includes('sharma');
       const targetShopId = isShop2 ? 'SHOP_02' : 'SHOP_01';
       const vendorUid    = isShop2 ? 'demo-kirana-vendor-2' : 'demo-kirana-vendor-1';
       const cleanName    = isShop2
-        ? 'Shri Krishna Kirana & Provision Store'
-        : 'Apna Kirana & General Store';
+        ? 'Apna Mart Shop 2'
+        : 'Apna Mart Shop 1';
 
       localStorage.setItem('apnabazaar_active_vendor_shop_id', targetShopId);
 
@@ -192,7 +195,7 @@ export function Login() {
           <div className="auth-feature-pill">
             <span className="pill-icon">🏪</span>
             <div>
-              <strong>Apna Kirana &amp; Shri Krishna</strong>
+              <strong>Apna Mart Shop 1 &amp; Shop 2</strong>
               <small>Real inventory with verified prices</small>
             </div>
           </div>
@@ -330,10 +333,10 @@ export function Login() {
               {/* Credentials hint */}
               <div className="auth-creds-hint">
                 <div className="auth-cred-row">
-                  <span>🏪 Shop 1</span><code>Apna Kirana (SHOP_01)</code>
+                  <span>🏪 Shop 1</span><code>Apna Mart Shop 1 (SHOP_01)</code>
                 </div>
                 <div className="auth-cred-row">
-                  <span>🏪 Shop 2</span><code>Shri Krishna (SHOP_02)</code>
+                  <span>🏪 Shop 2</span><code>Apna Mart Shop 2 (SHOP_02)</code>
                 </div>
                 <div className="auth-cred-row">
                   <span>🔒 Password</span><code>Apnamart@123</code>
@@ -345,17 +348,17 @@ export function Login() {
                 <div className="auth-chips-row">
                   <button
                     type="button"
-                    className={`auth-chip ${shopName === 'Apna Kirana & General Store' ? 'active' : ''}`}
-                    onClick={() => { setShopName('Apna Kirana & General Store'); setVendorPassword('Apnamart@123'); }}
+                    className={`auth-chip ${shopName === 'Apna Mart Shop 1' ? 'active' : ''}`}
+                    onClick={() => { setShopName('Apna Mart Shop 1'); setVendorPassword('Apnamart@123'); }}
                   >
-                    🏪 Apna Kirana (SHOP_01)
+                    🏪 Apna Mart Shop 1
                   </button>
                   <button
                     type="button"
-                    className={`auth-chip ${shopName === 'Shri Krishna Kirana & Provision Store' ? 'active' : ''}`}
-                    onClick={() => { setShopName('Shri Krishna Kirana & Provision Store'); setVendorPassword('Apnamart@123'); }}
+                    className={`auth-chip ${shopName === 'Apna Mart Shop 2' ? 'active' : ''}`}
+                    onClick={() => { setShopName('Apna Mart Shop 2'); setVendorPassword('Apnamart@123'); }}
                   >
-                    🏪 Shri Krishna (SHOP_02)
+                    🏪 Apna Mart Shop 2
                   </button>
                 </div>
               </div>

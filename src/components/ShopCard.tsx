@@ -50,7 +50,7 @@ export function ShopCard({ shop, distanceKm }: { shop: Shop; distanceKm?: number
                     🗺️ Google Places Listing
                   </span>
                 ) : (
-                  <span className="badge badge-source-manual" title="Registered ApnaBazaar local shop">
+                  <span className="badge badge-source-manual" title="Registered ApnaMart local shop">
                     🏪 Registered Local Shop
                   </span>
                 )}

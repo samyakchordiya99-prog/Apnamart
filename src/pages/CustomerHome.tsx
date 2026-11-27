@@ -138,7 +138,7 @@ export function CustomerHome() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>ApnaBazaar Kirana Discovery</h1>
+        <h1>ApnaMart Kirana Discovery</h1>
         <p className="muted">
           Fast, simple doorstep grocery delivery from trusted local Kirana shops near you.
         </p>

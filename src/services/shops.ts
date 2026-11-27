@@ -33,18 +33,18 @@ export function createTwoKiranaShopsForLocation(customerLoc: {
     id: DEMO_KIRANA_SHOP_1_ID,
     shopId: DEMO_KIRANA_SHOP_1_ID,
     vendorId: 'demo-kirana-vendor-1',
-    name: 'Apna Kirana & General Store',
+    name: 'Apna Mart Shop 1',
     category: 'Kirana / Grocery',
-    ownerName: 'Rameshwar Prasad (Demo Owner)',
-    phone: '+91 98000 00001 (Demo Listing)',
-    address: `Shop No. 4, Market Complex, near ${locality} (Sample Demo Address)`,
+    ownerName: 'Prakash (Gunwant Yogesh Chaudhari)',
+    phone: '+91 98000 00001',
+    address: `Shop No. 4, Market Complex, near ${locality}`,
     location: {
       lat: customerLoc.lat + 0.0055,
       lng: customerLoc.lng + 0.0042,
     },
     imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
     openingHours: '7:00 AM - 10:00 PM',
-    description: 'Fictional neighborhood Kirana store for college demonstration. Daily pulses, spices, flour, grains, and kitchen provisions.',
+    description: 'Apna Mart Shop 1 (Prakash Store) - Daily pulses, spices, flour, grains, and kitchen provisions.',
     status: 'active',
     approvalStatus: 'approved',
     createdByAdmin: true,
@@ -56,9 +56,9 @@ export function createTwoKiranaShopsForLocation(customerLoc: {
       codEnabled: true,
       upiQrStoragePath: 'payment-qr/SHOP_01/upi-qr.png',
       upiQrUrl: '/payment-qr/SHOP_01/upi-qr.png',
-      accountDetails: 'Central Bank of India - 2671',
+      accountDetails: 'PhonePe QR - Gunwant Yogesh Chaudhari',
       upiProvider: 'PhonePe',
-      merchantName: 'Apna Kirana & General Store',
+      merchantName: 'Gunwant Yogesh Chaudhari (Apna Mart Shop 1)',
     },
     createdAt: 1700000000000,
     updatedAt: Date.now(),
@@ -68,18 +68,18 @@ export function createTwoKiranaShopsForLocation(customerLoc: {
     id: DEMO_KIRANA_SHOP_2_ID,
     shopId: DEMO_KIRANA_SHOP_2_ID,
     vendorId: 'demo-kirana-vendor-2',
-    name: 'Shri Krishna Kirana & Provision Store',
+    name: 'Apna Mart Shop 2',
     category: 'Kirana / Grocery',
-    ownerName: 'Mohan Lal (Demo Owner)',
-    phone: '+91 98000 00002 (Demo Listing)',
-    address: `Shop No. 12, Main Bazaar Road, near ${locality} (Sample Demo Address)`,
+    ownerName: 'Shivshankar (Arman Attar)',
+    phone: '+91 98000 00002',
+    address: `Shop No. 12, Main Bazaar Road, near ${locality}`,
     location: {
       lat: customerLoc.lat - 0.0068,
       lng: customerLoc.lng + 0.0075,
     },
     imageUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80',
     openingHours: '6:30 AM - 9:30 PM',
-    description: 'Fictional neighborhood Kirana store for college demonstration. Packed grains, dairy items, oils, and household provisions.',
+    description: 'Apna Mart Shop 2 (Shivshankar Store) - Packed grains, dairy items, oils, and household provisions.',
     status: 'active',
     approvalStatus: 'approved',
     createdByAdmin: true,
@@ -91,9 +91,9 @@ export function createTwoKiranaShopsForLocation(customerLoc: {
       codEnabled: true,
       upiQrStoragePath: 'payment-qr/SHOP_02/upi-qr.png',
       upiQrUrl: '/payment-qr/SHOP_02/upi-qr.png',
-      accountDetails: 'State Bank of India - 4559',
-      upiProvider: 'PhonePe',
-      merchantName: 'Shri Krishna Kirana & Provision Store',
+      accountDetails: 'UPI ID: armanattar311@oksbi',
+      upiProvider: 'Google Pay',
+      merchantName: 'Arman Attar (Apna Mart Shop 2)',
     },
     createdAt: 1700000000000,
     updatedAt: Date.now(),
@@ -192,8 +192,38 @@ export function applyShopOverrides(shops: Shop[]): Shop[] {
   return shops.map((s) => {
     const ov = overrides[s.id];
     const updated = ov ? { ...s, ...ov } : { ...s };
-    if (s.id === 'SHOP_01' || s.id === 'SHOP_02') {
+    if (s.id === 'SHOP_01') {
       updated.approvalStatus = 'approved';
+      if (!updated.name || updated.name === 'Apna Kirana & General Store') {
+        updated.name = 'Apna Mart Shop 1';
+      }
+      if (!updated.paymentMethods || updated.paymentMethods.accountDetails?.includes('Central Bank')) {
+        updated.paymentMethods = {
+          upiEnabled: true,
+          codEnabled: true,
+          upiQrStoragePath: 'payment-qr/SHOP_01/upi-qr.png',
+          upiQrUrl: '/payment-qr/SHOP_01/upi-qr.png',
+          accountDetails: 'PhonePe QR - Gunwant Yogesh Chaudhari',
+          upiProvider: 'PhonePe',
+          merchantName: 'Gunwant Yogesh Chaudhari (Apna Mart Shop 1)',
+        };
+      }
+    } else if (s.id === 'SHOP_02') {
+      updated.approvalStatus = 'approved';
+      if (!updated.name || updated.name === 'Shri Krishna Kirana & Provision Store') {
+        updated.name = 'Apna Mart Shop 2';
+      }
+      if (!updated.paymentMethods || updated.paymentMethods.accountDetails?.includes('State Bank')) {
+        updated.paymentMethods = {
+          upiEnabled: true,
+          codEnabled: true,
+          upiQrStoragePath: 'payment-qr/SHOP_02/upi-qr.png',
+          upiQrUrl: '/payment-qr/SHOP_02/upi-qr.png',
+          accountDetails: 'UPI ID: armanattar311@oksbi',
+          upiProvider: 'Google Pay',
+          merchantName: 'Arman Attar (Apna Mart Shop 2)',
+        };
+      }
     }
     return updated;
   });
@@ -637,7 +667,7 @@ export async function listProductsForShop(shopId: string): Promise<Product[]> {
             id: d.id,
             productId: data.productId || d.id,
             shopId: normalizedShopId,
-            shopName: data.shopName || (normalizedShopId === 'SHOP_01' ? 'Apna Kirana & General Store' : 'Shri Krishna Kirana & Provision Store'),
+            shopName: data.shopName || (normalizedShopId === 'SHOP_01' ? 'Apna Mart Shop 1' : 'Apna Mart Shop 2'),
             vendorId: data.vendorId || existing?.vendorId || 'demo-vendor-1',
             name: data.productName || data.name || existing?.name || 'Grocery Item',
             productName: data.productName || data.name || existing?.name || 'Grocery Item',
@@ -763,8 +793,8 @@ export async function listAllProducts(): Promise<Product[]> {
             shopName:
               data.shopName ||
               (data.shopId === 'SHOP_02'
-                ? 'Shri Krishna Kirana & Provision Store'
-                : 'Apna Kirana & General Store'),
+                ? 'Apna Mart Shop 2'
+                : 'Apna Mart Shop 1'),
             vendorId: data.vendorId || existing?.vendorId || 'demo-vendor-1',
             name: data.productName || data.name || existing?.name || 'Grocery Item',
             productName: data.productName || data.name || existing?.name || 'Grocery Item',

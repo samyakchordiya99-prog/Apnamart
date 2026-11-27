@@ -44,9 +44,9 @@ export function VendorDashboard() {
       ? urlShopId
       : profile?.shopId
       ? profile.shopId
-      : profile?.uid === 'demo-kirana-vendor-2' || profile?.displayName?.toLowerCase().includes('krishna')
+      : profile?.uid === 'demo-kirana-vendor-2' || profile?.displayName?.toLowerCase().includes('krishna') || profile?.displayName?.toLowerCase().includes('shop 2') || profile?.displayName?.toLowerCase().includes('shivshankar')
       ? 'SHOP_02'
-      : profile?.uid === 'demo-kirana-vendor-1' || profile?.displayName?.toLowerCase().includes('apna kirana')
+      : profile?.uid === 'demo-kirana-vendor-1' || profile?.displayName?.toLowerCase().includes('apna kirana') || profile?.displayName?.toLowerCase().includes('shop 1') || profile?.displayName?.toLowerCase().includes('prakash')
       ? 'SHOP_01'
       : typeof window !== 'undefined'
       ? localStorage.getItem('apnabazaar_active_vendor_shop_id')
@@ -828,7 +828,7 @@ export function VendorDashboard() {
                 const isShop1 = shop.id === 'SHOP_01' || shop.id.includes('1');
                 const ordersCount = ordersByShop[shop.id]?.length || 0;
                 const pendingOrders = ordersByShop[shop.id]?.filter((o) => o.status === 'pending').length || 0;
-                const bank = isShop1 ? 'Central Bank of India - 2671' : 'State Bank of India - 4559';
+                const bank = shop.paymentMethods?.accountDetails || (isShop1 ? 'PhonePe - Gunwant Yogesh Chaudhari' : 'Google Pay - armanattar311@oksbi');
 
                 return (
                   <div
@@ -948,7 +948,7 @@ export function VendorDashboard() {
                     }}
                   >
                     <div>
-                      <strong>⏳ Verification Pending:</strong> Your shop has been submitted to ApnaBazaar
+                      <strong>⏳ Verification Pending:</strong> Your shop has been submitted to ApnaMart
                       administrators. It will appear to nearby customers once approved. You can add your products in the meantime!
                     </div>
                   </div>
@@ -1036,8 +1036,8 @@ export function VendorDashboard() {
                   const bankLabel =
                     shop.paymentMethods?.accountDetails ||
                     (shop.id === 'SHOP_01'
-                      ? 'Central Bank of India - 2671'
-                      : 'State Bank of India - 4559');
+                      ? 'PhonePe QR - Gunwant Yogesh Chaudhari'
+                      : 'Google Pay - armanattar311@oksbi');
 
                   return (
                     <div style={{ marginTop: '20px' }}>

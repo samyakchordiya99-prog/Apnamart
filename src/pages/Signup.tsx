@@ -61,7 +61,7 @@ export function Signup() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>Create your account</h1>
-        <p className="muted">Join ApnaBazaar as a Customer or Vendor.</p>
+        <p className="muted">Join ApnaMart as a Customer or Vendor.</p>
         {error && <div className="alert error">{error}</div>}
         {success && <div className="alert success">{success}</div>}
         <form onSubmit={handleSubmit} className="form">

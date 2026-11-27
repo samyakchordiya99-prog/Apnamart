@@ -417,7 +417,7 @@ export function AdminDashboard() {
               <span className="badge badge-admin">Master Admin</span>
             </div>
             <p className="muted" style={{ margin: '6px 0 0' }}>
-              Add, verify, configure, and monitor all local neighborhood shops across ApnaBazaar.
+              Add, verify, configure, and monitor all local neighborhood shops across ApnaMart.
             </p>
           </div>
           <button
@@ -744,7 +744,7 @@ export function AdminDashboard() {
                 disabled={saving}
                 style={{ minWidth: '180px' }}
               >
-                {saving ? 'Saving Shop…' : editingShopId ? '💾 Save Changes' : '✅ Add Shop to ApnaBazaar'}
+                {saving ? 'Saving Shop…' : editingShopId ? '💾 Save Changes' : '✅ Add Shop to ApnaMart'}
               </button>
             </div>
           </form>
